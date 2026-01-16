@@ -1,0 +1,897 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Total Internal Reflection Simulation</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body { 
+            background: #0f172a; 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            overflow: hidden;
+            color: #e2e8f0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+        
+        .header-bar {
+            background: rgba(30, 41, 59, 0.95);
+            border-bottom: 2px solid rgba(59, 130, 246, 0.5);
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .header-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #e2e8f0;
+            letter-spacing: 0.5px;
+        }
+        
+        .main-content {
+            flex: 1;
+            display: flex;
+            min-height: 0;
+        }
+        
+        #canvas-container {
+            flex: 1;
+            position: relative;
+            min-width: 0;
+        }
+        
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+        
+        .sidebar {
+            width: 280px;
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(12px);
+            border-left: 1px solid rgba(148, 163, 184, 0.1);
+            padding: 15px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .panel {
+            background: rgba(30, 41, 59, 0.8);
+            border: 1px solid rgba(148, 163, 184, 0.1);
+            border-radius: 8px;
+            padding: 12px;
+        }
+        
+        .panel-title {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #94a3b8;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .control-group {
+            margin-bottom: 12px;
+        }
+        
+        .control-group:last-child {
+            margin-bottom: 0;
+        }
+        
+        .control-label {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+            color: #cbd5e1;
+            margin-bottom: 6px;
+        }
+        
+        .control-value {
+            font-weight: 600;
+            color: #60a5fa;
+            font-variant-numeric: tabular-nums;
+            font-family: 'SF Mono', Monaco, monospace;
+        }
+        
+        .slider {
+            width: 100%;
+            height: 6px;
+            -webkit-appearance: none;
+            appearance: none;
+            background: rgba(148, 163, 184, 0.2);
+            border-radius: 3px;
+            outline: none;
+        }
+        
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            background: #3b82f6;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(59, 130, 246, 0.4);
+        }
+        
+        .slider::-moz-range-thumb {
+            width: 16px;
+            height: 16px;
+            background: #3b82f6;
+            border-radius: 50%;
+            cursor: pointer;
+            border: none;
+        }
+        
+        .presets {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            margin-top: 8px;
+        }
+        
+        .preset-btn {
+            padding: 4px 8px;
+            font-size: 10px;
+            background: rgba(59, 130, 246, 0.2);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            border-radius: 4px;
+            color: #93c5fd;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .preset-btn:hover {
+            background: rgba(59, 130, 246, 0.3);
+            border-color: rgba(59, 130, 246, 0.5);
+        }
+        
+        .preset-btn.active {
+            background: #3b82f6;
+            color: white;
+        }
+        
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px 0;
+            border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+            font-size: 12px;
+        }
+        
+        .stat-row:last-child {
+            border-bottom: none;
+        }
+        
+        .stat-label {
+            color: #94a3b8;
+        }
+        
+        .stat-value {
+            font-weight: 600;
+            font-family: 'SF Mono', Monaco, monospace;
+            font-variant-numeric: tabular-nums;
+        }
+        
+        .stat-value.highlight {
+            color: #fbbf24;
+        }
+        
+        .stat-value.tir {
+            color: #f87171;
+        }
+        
+        .stat-value.normal {
+            color: #34d399;
+        }
+        
+        .status-indicator {
+            padding: 8px 12px;
+            border-radius: 6px;
+            text-align: center;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            transition: all 0.3s;
+        }
+        
+        .status-indicator.refraction {
+            background: rgba(52, 211, 153, 0.2);
+            border: 1px solid rgba(52, 211, 153, 0.3);
+            color: #34d399;
+        }
+        
+        .status-indicator.tir {
+            background: rgba(248, 113, 113, 0.2);
+            border: 1px solid rgba(248, 113, 113, 0.3);
+            color: #f87171;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+        
+        .status-indicator.critical {
+            background: rgba(251, 191, 36, 0.2);
+            border: 1px solid rgba(251, 191, 36, 0.3);
+            color: #fbbf24;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        
+        .equation-display {
+            font-family: 'SF Mono', Monaco, monospace;
+            font-size: 10px;
+            color: #64748b;
+            background: rgba(15, 23, 42, 0.5);
+            padding: 6px 8px;
+            border-radius: 4px;
+            margin-top: 8px;
+            text-align: center;
+        }
+        
+        .info-tooltip {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 16px;
+            height: 16px;
+            background: rgba(148, 163, 184, 0.2);
+            border-radius: 50%;
+            font-size: 10px;
+            color: #94a3b8;
+            cursor: help;
+            margin-left: auto;
+        }
+        
+        .info-tooltip:hover::after {
+            content: attr(data-tip);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 11px;
+            white-space: nowrap;
+            z-index: 100;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            margin-bottom: 8px;
+            max-width: 200px;
+            white-space: normal;
+            text-align: left;
+        }
+        
+        .legend {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            font-size: 11px;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .legend-color {
+            width: 20px;
+            height: 4px;
+            border-radius: 2px;
+        }
+        
+        .about-text {
+            font-size: 11px;
+            color: #94a3b8;
+            line-height: 1.5;
+            text-align: justify;
+        }
+        
+        @media (max-width: 768px) {
+            .main-content {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                height: auto;
+                max-height: 40vh;
+                border-left: none;
+                border-top: 1px solid rgba(148, 163, 184, 0.1);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header-bar">
+        <span class="header-title">Total Internal Reflection</span>
+    </div>
+    
+    <div class="main-content">
+        <div id="canvas-container">
+            <canvas id="mainCanvas"></canvas>
+        </div>
+        
+        <div class="sidebar">
+            <div class="panel">
+                <div class="panel-title">
+                    <span>⚙️</span> Controls
+                    <span class="info-tooltip" data-tip="TIR occurs in fiber optics, prisms, and creates diamond brilliance">?</span>
+                </div>
+                
+                <div class="control-group">
+                    <div class="control-label">
+                        <span>Angle of Incidence (θ₁)</span>
+                        <span class="control-value" id="angleValue">30.0°</span>
+                    </div>
+                    <input type="range" class="slider" id="angleSlider" min="0" max="90" value="30" step="0.5">
+                </div>
+                
+                <div class="control-group">
+                    <div class="control-label">
+                        <span>n₁ (Dense Medium)</span>
+                        <span class="control-value" id="n1Value">1.50</span>
+                    </div>
+                    <input type="range" class="slider" id="n1Slider" min="1.3" max="2.5" value="1.5" step="0.01">
+                    <div class="presets">
+                        <button class="preset-btn" data-n1="1.33">Water</button>
+                        <button class="preset-btn active" data-n1="1.5">Glass</button>
+                        <button class="preset-btn" data-n1="2.42">Diamond</button>
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <div class="control-label">
+                        <span>n₂ (Less Dense)</span>
+                        <span class="control-value" id="n2Value">1.00</span>
+                    </div>
+                    <input type="range" class="slider" id="n2Slider" min="1.0" max="1.5" value="1.0" step="0.01">
+                </div>
+                
+                <div class="control-group">
+                    <div class="control-label">
+                        <span>Wavelength (λ)</span>
+                        <span class="control-value" id="wavelengthValue">550 nm</span>
+                    </div>
+                    <input type="range" class="slider" id="wavelengthSlider" min="380" max="700" value="550" step="1">
+                </div>
+            </div>
+            
+            <div class="panel">
+                <div class="panel-title"><span>📊</span> Calculated Values</div>
+                
+                <div id="statusIndicator" class="status-indicator refraction">
+                    Partial Reflection & Refraction
+                </div>
+                
+                <div style="margin-top: 10px;">
+                    <div class="stat-row">
+                        <span class="stat-label">Critical Angle (θc)</span>
+                        <span class="stat-value highlight" id="criticalAngle">41.81°</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Refraction Angle (θ₂)</span>
+                        <span class="stat-value" id="refractionAngle">48.59°</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Reflectance (R)</span>
+                        <span class="stat-value" id="reflectance">0.040</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Penetration Depth (δ)</span>
+                        <span class="stat-value" id="penetrationDepth">—</span>
+                    </div>
+                </div>
+                
+                <div class="equation-display" id="equationDisplay">
+                    n₁sin(θ₁) = n₂sin(θ₂)
+                </div>
+            </div>
+            
+            <div class="panel">
+                <div class="panel-title"><span>🎨</span> Legend</div>
+                <div class="legend">
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: linear-gradient(90deg, #fbbf24, #f59e0b);"></div>
+                        <span>Incident Ray</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: linear-gradient(90deg, #f97316, #ea580c);"></div>
+                        <span>Reflected Ray</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: linear-gradient(90deg, #fde047, #facc15);"></div>
+                        <span>Refracted Ray</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: linear-gradient(90deg, #22d3ee, rgba(34,211,238,0));"></div>
+                        <span>Evanescent Wave</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="panel">
+                <div class="panel-title"><span>ℹ️</span> About the Simulation</div>
+                <p class="about-text">
+                    This simulation demonstrates Total Internal Reflection (TIR), a phenomenon that occurs when light travels from a denser medium (higher refractive index) to a less dense medium (lower refractive index) at an angle greater than the critical angle. When TIR occurs, all light is reflected back into the denser medium with no refraction. This principle is fundamental to fiber optics, prisms, and explains the brilliance of diamonds. Adjust the angle of incidence and refractive indices to observe how light behaves at different conditions, including the formation of evanescent waves during TIR.
+                </p>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const canvas = document.getElementById('mainCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Parameters
+        let params = {
+            angle: 30,
+            n1: 1.5,
+            n2: 1.0,
+            wavelength: 550
+        };
+        
+        let time = 0;
+        let animationId;
+        
+        // DOM elements
+        const angleSlider = document.getElementById('angleSlider');
+        const n1Slider = document.getElementById('n1Slider');
+        const n2Slider = document.getElementById('n2Slider');
+        const wavelengthSlider = document.getElementById('wavelengthSlider');
+        
+        // Resize canvas
+        function resizeCanvas() {
+            const container = document.getElementById('canvas-container');
+            canvas.width = container.clientWidth * window.devicePixelRatio;
+            canvas.height = container.clientHeight * window.devicePixelRatio;
+            ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+        }
+        
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+        
+        // Physics calculations
+        function calculateCriticalAngle(n1, n2) {
+            if (n2 >= n1) return 90;
+            return Math.asin(n2 / n1) * 180 / Math.PI;
+        }
+        
+        function calculateRefractionAngle(theta1, n1, n2) {
+            const sinTheta2 = (n1 / n2) * Math.sin(theta1 * Math.PI / 180);
+            if (Math.abs(sinTheta2) > 1) return null; // TIR
+            return Math.asin(sinTheta2) * 180 / Math.PI;
+        }
+        
+        function calculateFresnelReflectance(theta1, n1, n2) {
+            const theta1Rad = theta1 * Math.PI / 180;
+            const sinTheta2 = (n1 / n2) * Math.sin(theta1Rad);
+            
+            if (Math.abs(sinTheta2) > 1) return 1; // TIR
+            
+            const theta2Rad = Math.asin(sinTheta2);
+            const cosTheta1 = Math.cos(theta1Rad);
+            const cosTheta2 = Math.cos(theta2Rad);
+            
+            // s-polarization
+            const rs = (n1 * cosTheta1 - n2 * cosTheta2) / (n1 * cosTheta1 + n2 * cosTheta2);
+            // p-polarization
+            const rp = (n2 * cosTheta1 - n1 * cosTheta2) / (n2 * cosTheta1 + n1 * cosTheta2);
+            
+            // Average for unpolarized light
+            return (rs * rs + rp * rp) / 2;
+        }
+        
+        function calculatePenetrationDepth(theta1, n1, n2, wavelength) {
+            const theta1Rad = theta1 * Math.PI / 180;
+            const term = n1 * n1 * Math.sin(theta1Rad) * Math.sin(theta1Rad) - n2 * n2;
+            if (term <= 0) return null;
+            return wavelength / (2 * Math.PI * Math.sqrt(term));
+        }
+        
+        function wavelengthToColor(wavelength) {
+            let r, g, b;
+            if (wavelength >= 380 && wavelength < 440) {
+                r = -(wavelength - 440) / (440 - 380);
+                g = 0;
+                b = 1;
+            } else if (wavelength >= 440 && wavelength < 490) {
+                r = 0;
+                g = (wavelength - 440) / (490 - 440);
+                b = 1;
+            } else if (wavelength >= 490 && wavelength < 510) {
+                r = 0;
+                g = 1;
+                b = -(wavelength - 510) / (510 - 490);
+            } else if (wavelength >= 510 && wavelength < 580) {
+                r = (wavelength - 510) / (580 - 510);
+                g = 1;
+                b = 0;
+            } else if (wavelength >= 580 && wavelength < 645) {
+                r = 1;
+                g = -(wavelength - 645) / (645 - 580);
+                b = 0;
+            } else {
+                r = 1;
+                g = 0;
+                b = 0;
+            }
+            return `rgb(${Math.round(r * 255)}, ${Math.round(g * 255)}, ${Math.round(b * 255)})`;
+        }
+        
+        function updateDisplay() {
+            const criticalAngle = calculateCriticalAngle(params.n1, params.n2);
+            const refractionAngle = calculateRefractionAngle(params.angle, params.n1, params.n2);
+            const reflectance = calculateFresnelReflectance(params.angle, params.n1, params.n2);
+            const penetrationDepth = calculatePenetrationDepth(params.angle, params.n1, params.n2, params.wavelength);
+            
+            const isTIR = params.angle >= criticalAngle;
+            const isAtCritical = Math.abs(params.angle - criticalAngle) < 0.5;
+            
+            // Update values
+            document.getElementById('angleValue').textContent = params.angle.toFixed(1) + '°';
+            document.getElementById('n1Value').textContent = params.n1.toFixed(2);
+            document.getElementById('n2Value').textContent = params.n2.toFixed(2);
+            document.getElementById('wavelengthValue').textContent = params.wavelength + ' nm';
+            
+            document.getElementById('criticalAngle').textContent = criticalAngle.toFixed(2) + '°';
+            
+            const refractionEl = document.getElementById('refractionAngle');
+            if (isTIR) {
+                refractionEl.textContent = 'TIR - No Refraction';
+                refractionEl.className = 'stat-value tir';
+            } else {
+                refractionEl.textContent = refractionAngle.toFixed(2) + '°';
+                refractionEl.className = 'stat-value normal';
+            }
+            
+            document.getElementById('reflectance').textContent = reflectance.toFixed(3);
+            
+            const depthEl = document.getElementById('penetrationDepth');
+            if (penetrationDepth && isTIR) {
+                depthEl.textContent = penetrationDepth.toFixed(1) + ' nm';
+            } else {
+                depthEl.textContent = '—';
+            }
+            
+            // Update status
+            const statusEl = document.getElementById('statusIndicator');
+            if (isTIR) {
+                statusEl.textContent = '⚡ Total Internal Reflection';
+                statusEl.className = 'status-indicator tir';
+            } else if (isAtCritical) {
+                statusEl.textContent = '⚠️ At Critical Angle';
+                statusEl.className = 'status-indicator critical';
+            } else {
+                statusEl.textContent = '✓ Partial Reflection & Refraction';
+                statusEl.className = 'status-indicator refraction';
+            }
+            
+            // Update equation display
+            const eqEl = document.getElementById('equationDisplay');
+            if (isTIR) {
+                eqEl.textContent = `θ₁ (${params.angle.toFixed(1)}°) > θc (${criticalAngle.toFixed(1)}°) → TIR`;
+            } else {
+                eqEl.textContent = `${params.n1.toFixed(2)}×sin(${params.angle.toFixed(1)}°) = ${params.n2.toFixed(2)}×sin(${refractionAngle.toFixed(1)}°)`;
+            }
+        }
+        
+        function draw() {
+            const w = canvas.width / window.devicePixelRatio;
+            const h = canvas.height / window.devicePixelRatio;
+            
+            // Clear canvas
+            ctx.fillStyle = '#0f172a';
+            ctx.fillRect(0, 0, w, h);
+            
+            // Interface position
+            const interfaceY = h * 0.5;
+            const centerX = w * 0.5;
+            
+            // Draw media regions
+            // Upper medium (less dense - air)
+            ctx.fillStyle = 'rgba(241, 245, 249, 0.03)';
+            ctx.fillRect(0, 0, w, interfaceY);
+            
+            // Lower medium (denser - glass)
+            const gradient = ctx.createLinearGradient(0, interfaceY, 0, h);
+            gradient.addColorStop(0, 'rgba(59, 130, 246, 0.15)');
+            gradient.addColorStop(1, 'rgba(59, 130, 246, 0.25)');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, interfaceY, w, h - interfaceY);
+            
+            // Draw interface line
+            ctx.strokeStyle = 'rgba(148, 163, 184, 0.5)';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(0, interfaceY);
+            ctx.lineTo(w, interfaceY);
+            ctx.stroke();
+            
+            // Draw normal line (dashed)
+            ctx.strokeStyle = 'rgba(148, 163, 184, 0.4)';
+            ctx.lineWidth = 1;
+            ctx.setLineDash([8, 8]);
+            ctx.beginPath();
+            ctx.moveTo(centerX, interfaceY - 200);
+            ctx.lineTo(centerX, interfaceY + 200);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            
+            // Calculate physics
+            const criticalAngle = calculateCriticalAngle(params.n1, params.n2);
+            const refractionAngle = calculateRefractionAngle(params.angle, params.n1, params.n2);
+            const reflectance = calculateFresnelReflectance(params.angle, params.n1, params.n2);
+            const isTIR = params.angle >= criticalAngle;
+            
+            const theta1Rad = params.angle * Math.PI / 180;
+            const rayLength = 250;
+            
+            // Incident ray direction (coming from bottom-left)
+            const incidentEndX = centerX;
+            const incidentEndY = interfaceY;
+            const incidentStartX = centerX - rayLength * Math.sin(theta1Rad);
+            const incidentStartY = interfaceY + rayLength * Math.cos(theta1Rad);
+            
+            // Draw wave crests on incident ray
+            const waveSpeed = 0.05;
+            const waveSpacing = 20;
+            const numWaves = Math.floor(rayLength / waveSpacing);
+            
+            // Incident ray with animated waves
+            ctx.strokeStyle = '#fbbf24';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(incidentStartX, incidentStartY);
+            ctx.lineTo(incidentEndX, incidentEndY);
+            ctx.stroke();
+            
+            // Wave crests on incident ray
+            const incidentDirX = (incidentEndX - incidentStartX) / rayLength;
+            const incidentDirY = (incidentEndY - incidentStartY) / rayLength;
+            
+            for (let i = 0; i < numWaves; i++) {
+                const phase = (time * waveSpeed + i * waveSpacing) % rayLength;
+                const waveX = incidentStartX + incidentDirX * phase;
+                const waveY = incidentStartY + incidentDirY * phase;
+                
+                ctx.fillStyle = `rgba(251, 191, 36, ${0.8 - (phase / rayLength) * 0.5})`;
+                ctx.beginPath();
+                ctx.arc(waveX, waveY, 4, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            
+            // Reflected ray
+            const reflectedEndX = centerX + rayLength * Math.sin(theta1Rad);
+            const reflectedEndY = interfaceY + rayLength * Math.cos(theta1Rad);
+            
+            const reflectedAlpha = 0.3 + reflectance * 0.7;
+            ctx.strokeStyle = `rgba(249, 115, 22, ${reflectedAlpha})`;
+            ctx.lineWidth = 2 + reflectance * 2;
+            ctx.beginPath();
+            ctx.moveTo(centerX, interfaceY);
+            ctx.lineTo(reflectedEndX, reflectedEndY);
+            ctx.stroke();
+            
+            // Wave crests on reflected ray
+            const reflectedDirX = (reflectedEndX - centerX) / rayLength;
+            const reflectedDirY = (reflectedEndY - interfaceY) / rayLength;
+            
+            for (let i = 0; i < numWaves; i++) {
+                const phase = (time * waveSpeed + i * waveSpacing) % rayLength;
+                const waveX = centerX + reflectedDirX * phase;
+                const waveY = interfaceY + reflectedDirY * phase;
+                
+                ctx.fillStyle = `rgba(249, 115, 22, ${reflectedAlpha * (0.8 - (phase / rayLength) * 0.5)})`;
+                ctx.beginPath();
+                ctx.arc(waveX, waveY, 3 + reflectance, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            
+            // Refracted ray (only if not TIR)
+            if (!isTIR && refractionAngle !== null) {
+                const theta2Rad = refractionAngle * Math.PI / 180;
+                const refractedEndX = centerX + rayLength * Math.sin(theta2Rad);
+                const refractedEndY = interfaceY - rayLength * Math.cos(theta2Rad);
+                
+                const transmittance = 1 - reflectance;
+                ctx.strokeStyle = `rgba(253, 224, 71, ${transmittance})`;
+                ctx.lineWidth = 2 + transmittance * 2;
+                ctx.beginPath();
+                ctx.moveTo(centerX, interfaceY);
+                ctx.lineTo(refractedEndX, refractedEndY);
+                ctx.stroke();
+                
+                // Wave crests on refracted ray
+                const refractedDirX = (refractedEndX - centerX) / rayLength;
+                const refractedDirY = (refractedEndY - interfaceY) / rayLength;
+                
+                for (let i = 0; i < numWaves; i++) {
+                    const phase = (time * waveSpeed * (params.n1 / params.n2) + i * waveSpacing) % rayLength;
+                    const waveX = centerX + refractedDirX * phase;
+                    const waveY = interfaceY + refractedDirY * phase;
+                    
+                    ctx.fillStyle = `rgba(253, 224, 71, ${transmittance * (0.8 - (phase / rayLength) * 0.5)})`;
+                    ctx.beginPath();
+                    ctx.arc(waveX, waveY, 3, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+            
+            // Evanescent wave (during TIR)
+            if (isTIR) {
+                const penetrationDepth = calculatePenetrationDepth(params.angle, params.n1, params.n2, params.wavelength);
+                const scaledDepth = penetrationDepth ? Math.min(penetrationDepth * 0.5, 100) : 50;
+                
+                // Draw evanescent field
+                const evanescentWidth = 200;
+                for (let z = 0; z < scaledDepth * 2; z += 2) {
+                    const decay = Math.exp(-z / scaledDepth);
+                    const oscillation = Math.sin(time * 0.1 - z * 0.1) * 0.3 + 0.7;
+                    const alpha = decay * oscillation * 0.6;
+                    
+                    ctx.fillStyle = `rgba(34, 211, 238, ${alpha})`;
+                    ctx.beginPath();
+                    ctx.ellipse(centerX, interfaceY - z, evanescentWidth * decay, 3, 0, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                
+                // Penetration depth indicator
+                ctx.strokeStyle = 'rgba(34, 211, 238, 0.5)';
+                ctx.lineWidth = 1;
+                ctx.setLineDash([4, 4]);
+                ctx.beginPath();
+                ctx.moveTo(centerX - 30, interfaceY - scaledDepth);
+                ctx.lineTo(centerX + 30, interfaceY - scaledDepth);
+                ctx.stroke();
+                ctx.setLineDash([]);
+                
+                ctx.fillStyle = 'rgba(34, 211, 238, 0.8)';
+                ctx.font = '11px -apple-system, sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText('δ', centerX, interfaceY - scaledDepth - 8);
+            }
+            
+            // Draw angle arcs
+            const arcRadius = 50;
+            
+            // Incident angle arc
+            ctx.strokeStyle = '#fbbf24';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(centerX, interfaceY, arcRadius, Math.PI / 2, Math.PI / 2 + theta1Rad, false);
+            ctx.stroke();
+            
+            // Angle label for incident
+            const labelRadius = arcRadius + 15;
+            const labelAngle = Math.PI / 2 + theta1Rad / 2;
+            ctx.fillStyle = '#fbbf24';
+            ctx.font = '12px -apple-system, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('θ₁', centerX - labelRadius * Math.cos(labelAngle - Math.PI/2), interfaceY + labelRadius * Math.sin(labelAngle - Math.PI/2));
+            
+            // Reflected angle arc
+            ctx.strokeStyle = '#f97316';
+            ctx.beginPath();
+            ctx.arc(centerX, interfaceY, arcRadius - 10, Math.PI / 2 - theta1Rad, Math.PI / 2, false);
+            ctx.stroke();
+            
+            // Refracted angle arc (if applicable)
+            if (!isTIR && refractionAngle !== null) {
+                const theta2Rad = refractionAngle * Math.PI / 180;
+                ctx.strokeStyle = '#fde047';
+                ctx.beginPath();
+                ctx.arc(centerX, interfaceY, arcRadius, -Math.PI / 2, -Math.PI / 2 + theta2Rad, false);
+                ctx.stroke();
+                
+                ctx.fillStyle = '#fde047';
+                const label2Angle = -Math.PI / 2 + theta2Rad / 2;
+                ctx.fillText('θ₂', centerX + labelRadius * Math.cos(label2Angle + Math.PI/2), interfaceY - labelRadius * Math.sin(label2Angle + Math.PI/2) - 5);
+            }
+            
+            // Draw medium labels
+            ctx.fillStyle = 'rgba(148, 163, 184, 0.7)';
+            ctx.font = '13px -apple-system, sans-serif';
+            ctx.textAlign = 'left';
+            ctx.fillText(`n₂ = ${params.n2.toFixed(2)} (Air)`, 20, 30);
+            ctx.fillText(`n₁ = ${params.n1.toFixed(2)} (Glass)`, 20, h - 20);
+            
+            // Critical angle indicator line
+            if (params.n2 < params.n1) {
+                const criticalRad = criticalAngle * Math.PI / 180;
+                ctx.strokeStyle = 'rgba(251, 191, 36, 0.3)';
+                ctx.lineWidth = 1;
+                ctx.setLineDash([5, 5]);
+                ctx.beginPath();
+                ctx.moveTo(centerX, interfaceY);
+                ctx.lineTo(centerX - 150 * Math.sin(criticalRad), interfaceY + 150 * Math.cos(criticalRad));
+                ctx.stroke();
+                ctx.setLineDash([]);
+                
+                ctx.fillStyle = 'rgba(251, 191, 36, 0.6)';
+                ctx.font = '10px -apple-system, sans-serif';
+                ctx.fillText(`θc = ${criticalAngle.toFixed(1)}°`, centerX - 170 * Math.sin(criticalRad), interfaceY + 170 * Math.cos(criticalRad));
+            }
+            
+            // Point of incidence
+            ctx.fillStyle = '#fff';
+            ctx.beginPath();
+            ctx.arc(centerX, interfaceY, 5, 0, Math.PI * 2);
+            ctx.fill();
+            
+            time += 16;
+        }
+        
+        function animate() {
+            draw();
+            updateDisplay();
+            animationId = requestAnimationFrame(animate);
+        }
+        
+        // Event listeners
+        angleSlider.addEventListener('input', (e) => {
+            params.angle = parseFloat(e.target.value);
+        });
+        
+        n1Slider.addEventListener('input', (e) => {
+            params.n1 = parseFloat(e.target.value);
+            // Ensure n2 < n1
+            if (params.n2 >= params.n1) {
+                params.n2 = params.n1 - 0.01;
+                n2Slider.value = params.n2;
+            }
+            n2Slider.max = params.n1 - 0.01;
+            
+            // Update preset buttons
+            document.querySelectorAll('.preset-btn').forEach(btn => {
+                btn.classList.toggle('active', parseFloat(btn.dataset.n1) === params.n1);
+            });
+        });
+        
+        n2Slider.addEventListener('input', (e) => {
+            params.n2 = parseFloat(e.target.value);
+        });
+        
+        wavelengthSlider.addEventListener('input', (e) => {
+            params.wavelength = parseFloat(e.target.value);
+        });
+        
+        // Preset buttons
+        document.querySelectorAll('.preset-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                params.n1 = parseFloat(btn.dataset.n1);
+                n1Slider.value = params.n1;
+                
+                if (params.n2 >= params.n1) {
+                    params.n2 = params.n1 - 0.01;
+                    n2Slider.value = params.n2;
+                }
+                n2Slider.max = params.n1 - 0.01;
+                
+                document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+            });
+        });
+        
+        // Start animation
+        animate();
+    </script>
+</body>
+</html>

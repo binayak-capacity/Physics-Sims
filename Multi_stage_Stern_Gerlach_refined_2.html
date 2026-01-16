@@ -1,0 +1,1815 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multi-Stage Stern-Gerlach Experiment - 3D View</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body { 
+            background: #0a0e17; 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            overflow: hidden;
+            color: #e2e8f0;
+        }
+        
+        .top-header {
+            width: 100%;
+            height: 60px;
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(148, 163, 184, 0.15);
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            padding: 0 20px;
+        }
+        
+        .top-header h1 {
+            font-size: 20px;
+            font-weight: 600;
+            color: #f1f5f9;
+        }
+        
+        .top-header h1 span {
+            margin-right: 10px;
+        }
+        
+        .top-header p {
+            font-size: 12px;
+            color: #94a3b8;
+            margin-left: 15px;
+        }
+        
+        .main-container {
+            display: flex;
+            width: 100vw;
+            height: calc(100vh - 60px);
+        }
+        
+        #canvas-container {
+            flex: 1;
+            position: relative;
+        }
+        
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+        
+        .right-panel {
+            width: 360px;
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(12px);
+            border-left: 1px solid rgba(148, 163, 184, 0.15);
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            padding: 20px;
+            gap: 15px;
+        }
+        
+        .panel-section {
+            background: rgba(30, 41, 59, 0.5);
+            border: 1px solid rgba(148, 163, 184, 0.1);
+            border-radius: 12px;
+            padding: 16px;
+        }
+        
+        .panel-section h3 {
+            font-size: 14px;
+            font-weight: 600;
+            color: #f1f5f9;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .stat-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        
+        .stat-group.three-cols {
+            grid-template-columns: 1fr 1fr 1fr;
+        }
+        
+        .stat {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            padding: 10px;
+            background: rgba(15, 23, 42, 0.5);
+            border-radius: 8px;
+            text-align: center;
+            min-height: 60px;
+        }
+        
+        .stat-label {
+            color: #94a3b8;
+            font-size: 10px;
+            white-space: nowrap;
+        }
+        
+        .stat-value {
+            color: #f1f5f9;
+            font-weight: 600;
+            font-size: 16px;
+            font-variant-numeric: tabular-nums;
+            min-width: 40px;
+            text-align: center;
+        }
+        
+        .control {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+        
+        .control:last-child {
+            margin-bottom: 0;
+        }
+        
+        .control-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .control label {
+            color: #94a3b8;
+            font-size: 12px;
+        }
+        
+        .control-value-display {
+            color: #f1f5f9;
+            font-weight: 600;
+            font-size: 13px;
+        }
+        
+        .slider {
+            width: 100%;
+            height: 6px;
+            -webkit-appearance: none;
+            appearance: none;
+            background: rgba(148, 163, 184, 0.2);
+            border-radius: 3px;
+            outline: none;
+        }
+        
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            background: #3b82f6;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        .slider::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+        }
+        
+        .slider.field-strength::-webkit-slider-thumb {
+            background: #f472b6;
+        }
+        
+        .toggle-control {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-top: 1px solid rgba(148, 163, 184, 0.1);
+            margin-top: 4px;
+        }
+        
+        .toggle-label {
+            color: #94a3b8;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .toggle-label .icon {
+            font-size: 14px;
+        }
+        
+        .toggle-switch {
+            position: relative;
+            width: 48px;
+            height: 26px;
+            background: rgba(148, 163, 184, 0.3);
+            border-radius: 13px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        .toggle-switch.active {
+            background: #3b82f6;
+        }
+        
+        .toggle-switch::after {
+            content: '';
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            transition: transform 0.3s;
+        }
+        
+        .toggle-switch.active::after {
+            transform: translateX(22px);
+        }
+        
+        .toggle-status {
+            font-size: 11px;
+            color: #f1f5f9;
+            font-weight: 600;
+            min-width: 30px;
+            text-align: right;
+        }
+        
+        button {
+            width: 100%;
+            padding: 10px 14px;
+            background: #3b82f6;
+            border: none;
+            border-radius: 8px;
+            color: white;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.2s;
+            margin-bottom: 8px;
+        }
+        
+        button:hover {
+            background: #2563eb;
+            transform: translateY(-1px);
+        }
+        
+        button:last-child {
+            margin-bottom: 0;
+        }
+        
+        button.danger {
+            background: #dc2626;
+        }
+        
+        button.danger:hover {
+            background: #b91c1c;
+        }
+        
+        button.success {
+            background: #059669;
+        }
+        
+        button.success:hover {
+            background: #047857;
+        }
+        
+        button.warning {
+            background: #d97706;
+        }
+        
+        button.warning:hover {
+            background: #b45309;
+        }
+        
+        button:disabled {
+            background: #475569;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .stage-config {
+            background: rgba(15, 23, 42, 0.5);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 10px;
+            border: 1px solid rgba(148, 163, 184, 0.1);
+        }
+        
+        .stage-config:last-child {
+            margin-bottom: 0;
+        }
+        
+        .stage-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .stage-title {
+            font-weight: 600;
+            font-size: 13px;
+            color: #f1f5f9;
+        }
+        
+        .stage-title.z-axis {
+            color: #f472b6;
+        }
+        
+        .stage-title.x-axis {
+            color: #a78bfa;
+        }
+        
+        .remove-stage {
+            background: transparent;
+            border: none;
+            color: #ef4444;
+            cursor: pointer;
+            font-size: 16px;
+            padding: 4px 8px;
+            margin: 0;
+            width: auto;
+        }
+        
+        .remove-stage:hover {
+            color: #dc2626;
+            background: rgba(239, 68, 68, 0.1);
+            border-radius: 4px;
+        }
+        
+        .stage-controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        
+        .stage-control {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        
+        .stage-control label {
+            font-size: 11px;
+            color: #94a3b8;
+        }
+        
+        select {
+            padding: 8px 10px;
+            background: rgba(30, 41, 59, 0.8);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            border-radius: 6px;
+            color: #f1f5f9;
+            font-size: 12px;
+            cursor: pointer;
+        }
+        
+        select:focus {
+            outline: none;
+            border-color: #3b82f6;
+        }
+        
+        .info-text {
+            color: #94a3b8;
+            font-size: 11px;
+            line-height: 1.5;
+        }
+        
+        .legend {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid rgba(148, 163, 184, 0.1);
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 11px;
+        }
+        
+        .legend-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+        
+        .legend-dot.initial { background: #a3e635; }
+        .legend-dot.z-up { background: #f472b6; }
+        .legend-dot.z-down { background: #60a5fa; }
+        .legend-dot.x-plus { background: #a78bfa; }
+        .legend-dot.x-minus { background: #34d399; }
+        
+        .button-row {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .button-row button {
+            flex: 1;
+            margin-bottom: 0;
+        }
+        
+        .about-text {
+            color: #94a3b8;
+            font-size: 11px;
+            line-height: 1.6;
+        }
+        
+        .about-text p {
+            margin-bottom: 10px;
+        }
+        
+        .about-text p:last-child {
+            margin-bottom: 0;
+        }
+        
+        .about-text strong {
+            color: #e2e8f0;
+        }
+        
+        .field-strength-control {
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid rgba(148, 163, 184, 0.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="top-header">
+        <h1><span>⚛️</span> Multi-Stage Stern-Gerlach 3D</h1>
+        <p>Sequential Quantum Measurement Simulation</p>
+    </div>
+    
+    <div class="main-container">
+        <div id="canvas-container">
+            <canvas id="mainCanvas"></canvas>
+        </div>
+        
+        <div class="right-panel">
+            <div class="panel-section">
+                <h3>📊 Detection Statistics</h3>
+                <div class="stat-group three-cols">
+                    <div class="stat">
+                        <span class="stat-label">Total</span>
+                        <span class="stat-value" id="totalAtoms">0</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-label">Detected</span>
+                        <span class="stat-value" id="detectedAtoms">0</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-label">Blocked</span>
+                        <span class="stat-value" style="color: #ef4444;" id="blockedAtoms">0</span>
+                    </div>
+                </div>
+                <div class="stat-group" style="margin-top: 10px;">
+                    <div class="stat">
+                        <span class="stat-label">Total +</span>
+                        <span class="stat-value" id="totalPlus">0</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-label">Total −</span>
+                        <span class="stat-value" id="totalMinus">0</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="panel-section">
+                <h3>🔧 Experiment Builder</h3>
+                <div id="stagesContainer"></div>
+                <div class="button-row" style="margin-top: 12px;">
+                    <button id="addStage" class="success">+ Add Stage</button>
+                    <button id="reset" class="danger">Reset Stats</button>
+                </div>
+            </div>
+            
+            <div class="panel-section">
+                <h3>⚙️ Controls</h3>
+                <div class="control">
+                    <div class="control-header">
+                        <label for="emissionRate">Emission Rate</label>
+                        <span class="control-value-display"><span id="emissionValue">5</span> /s</span>
+                    </div>
+                    <input type="range" class="slider" id="emissionRate" min="1" max="15" value="5">
+                </div>
+                <div class="toggle-control">
+                    <div class="toggle-label">
+                        <span class="icon">🧲</span>
+                        <span>Magnetic Field</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <div class="toggle-switch active" id="magneticFieldToggle"></div>
+                        <span class="toggle-status" id="magneticFieldStatus">ON</span>
+                    </div>
+                </div>
+                <div class="field-strength-control">
+                    <div class="control">
+                        <div class="control-header">
+                            <label for="fieldStrength">🔋 Field Strength</label>
+                            <span class="control-value-display"><span id="fieldStrengthValue">100</span>%</span>
+                        </div>
+                        <input type="range" class="slider field-strength" id="fieldStrength" min="10" max="200" value="100">
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-top: 4px;">
+                        <span style="font-size: 10px; color: #64748b;">Weak (10%)</span>
+                        <span style="font-size: 10px; color: #64748b;">Strong (200%)</span>
+                    </div>
+                </div>
+                <button id="resetSimulation" class="warning" style="margin-top: 12px;">🔄 Reset Simulation</button>
+                <button id="clearScreen" style="background: #6366f1;">🧹 Clear Screen Spots</button>
+            </div>
+            
+            <div class="panel-section">
+                <h3>📖 Legend</h3>
+                <p class="info-text">Spin states are color-coded by axis and value:</p>
+                <div class="legend">
+                    <div class="legend-item">
+                        <div class="legend-dot initial"></div>
+                        <span>Initial (unpolarized)</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-dot z-up"></div>
+                        <span>Z+ (spin up)</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-dot z-down"></div>
+                        <span>Z− (spin down)</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-dot x-plus"></div>
+                        <span>X+ (spin right)</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-dot x-minus"></div>
+                        <span>X− (spin left)</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="panel-section">
+                <h3>ℹ️ About the Simulation</h3>
+                <div class="about-text">
+                    <p>
+                        <strong>The Stern-Gerlach experiment</strong> (1922) was a groundbreaking physics experiment that demonstrated the quantization of angular momentum (spin) in atoms.
+                    </p>
+                    <p>
+                        In this simulation, <strong>silver atoms</strong> are emitted from a heated source and pass through an <strong>inhomogeneous magnetic field</strong>. The non-uniform field causes atoms to deflect based on their spin state—either "spin up" (+) or "spin down" (−).
+                    </p>
+                    <p>
+                        <strong>3D View:</strong> The magnet, source, and detector are now rendered with 3D perspective for better visualization.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const canvas = document.getElementById('mainCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        let width, height;
+        let atoms = [];
+        let lastEmitTime = 0;
+        let animationTime = 0;
+        
+        // Detection spots on the screen
+        let detectionSpots = [];
+        const MAX_SPOTS = 500;
+        
+        // Statistics
+        let stats = {
+            total: 0,
+            detected: 0,
+            blocked: 0,
+            totalPlus: 0,
+            totalMinus: 0
+        };
+        
+        // Controls
+        let emissionRate = 5;
+        let magneticFieldEnabled = true;
+        let fieldStrength = 1.0;
+        
+        // Stage system
+        let stages = [
+            { axis: 'z', blocker: 'none' }
+        ];
+        
+        // Layout - increased spacing between source and magnet
+        let sourceX, detectorX, centerY;
+        let stagePositions = [];
+        let baseDeflectionAmount = 80;
+        
+        // 3D perspective settings
+        const perspective = {
+            vanishingPointY: 0.5,
+            depth: 0.3,
+            tilt: 0.15
+        };
+        
+        function getDeflectionAmount() {
+            return baseDeflectionAmount * fieldStrength;
+        }
+        
+        const COLORS = {
+            initial: { hex: '#a3e635', rgba: 'rgba(163, 230, 53, ' },
+            zPlus: { hex: '#f472b6', rgba: 'rgba(244, 114, 182, ' },
+            zMinus: { hex: '#60a5fa', rgba: 'rgba(96, 165, 250, ' },
+            xPlus: { hex: '#a78bfa', rgba: 'rgba(167, 139, 250, ' },
+            xMinus: { hex: '#34d399', rgba: 'rgba(52, 211, 153, ' }
+        };
+        
+        function getSpinColor(axis, value) {
+            if (axis === null) return COLORS.initial;
+            if (axis === 'z') {
+                return value > 0 ? COLORS.zPlus : COLORS.zMinus;
+            } else {
+                return value > 0 ? COLORS.xPlus : COLORS.xMinus;
+            }
+        }
+        
+        function resize() {
+            const container = document.getElementById('canvas-container');
+            width = canvas.width = container.clientWidth;
+            height = canvas.height = container.clientHeight;
+            
+            centerY = height * 0.5;
+            sourceX = width * 0.06;
+            detectorX = width * 0.88;
+            
+            calculateStagePositions();
+        }
+        
+        function calculateStagePositions() {
+            stagePositions = [];
+            const numStages = stages.length;
+            
+            // Increased spacing: magnet starts much further from source
+            const stage1Start = sourceX + 200; // Increased from 80 to 200
+            const stage1Width = 100;
+            const stage2Start = stage1Start + stage1Width + 180;
+            const stage2Width = 80;
+            
+            if (numStages >= 1) {
+                stagePositions.push({
+                    startX: stage1Start,
+                    endX: stage1Start + stage1Width,
+                    centerX: stage1Start + stage1Width / 2
+                });
+            }
+            
+            if (numStages >= 2) {
+                stagePositions.push({
+                    startX: stage2Start,
+                    endX: stage2Start + stage2Width,
+                    centerX: stage2Start + stage2Width / 2
+                });
+            }
+        }
+        
+        function addDetectionSpot(y, axis, value) {
+            const color = getSpinColor(axis, value);
+            const spot = {
+                x: detectorX,
+                y: y,
+                color: color,
+                alpha: 1.0,
+                size: 3 + Math.random() * 2,
+                createdAt: animationTime
+            };
+            
+            detectionSpots.push(spot);
+            
+            if (detectionSpots.length > MAX_SPOTS) {
+                detectionSpots.shift();
+            }
+        }
+        
+        // 3D helper functions
+        function draw3DBox(x, y, w, h, depth, topColor, frontColor, sideColor, highlight = false) {
+            const depthX = depth * 0.7;
+            const depthY = depth * 0.5;
+            
+            // Top face
+            ctx.fillStyle = topColor;
+            ctx.beginPath();
+            ctx.moveTo(x, y);
+            ctx.lineTo(x + w, y);
+            ctx.lineTo(x + w + depthX, y - depthY);
+            ctx.lineTo(x + depthX, y - depthY);
+            ctx.closePath();
+            ctx.fill();
+            
+            // Front face
+            ctx.fillStyle = frontColor;
+            ctx.beginPath();
+            ctx.moveTo(x, y);
+            ctx.lineTo(x + w, y);
+            ctx.lineTo(x + w, y + h);
+            ctx.lineTo(x, y + h);
+            ctx.closePath();
+            ctx.fill();
+            
+            // Right side face
+            ctx.fillStyle = sideColor;
+            ctx.beginPath();
+            ctx.moveTo(x + w, y);
+            ctx.lineTo(x + w + depthX, y - depthY);
+            ctx.lineTo(x + w + depthX, y + h - depthY);
+            ctx.lineTo(x + w, y + h);
+            ctx.closePath();
+            ctx.fill();
+            
+            // Edges
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(x, y);
+            ctx.lineTo(x + w, y);
+            ctx.lineTo(x + w + depthX, y - depthY);
+            ctx.moveTo(x + w, y);
+            ctx.lineTo(x + w, y + h);
+            ctx.stroke();
+            
+            if (highlight) {
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(x + 5, y + 5);
+                ctx.lineTo(x + w - 5, y + 5);
+                ctx.stroke();
+            }
+        }
+        
+        function draw3DCylinder(cx, cy, radiusX, radiusY, height, baseColor, highlightColor) {
+            // Bottom ellipse
+            const bottomY = cy + height / 2;
+            ctx.fillStyle = baseColor;
+            ctx.beginPath();
+            ctx.ellipse(cx, bottomY, radiusX, radiusY, 0, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Cylinder body
+            const gradient = ctx.createLinearGradient(cx - radiusX, 0, cx + radiusX, 0);
+            gradient.addColorStop(0, baseColor);
+            gradient.addColorStop(0.3, highlightColor);
+            gradient.addColorStop(0.5, highlightColor);
+            gradient.addColorStop(0.7, baseColor);
+            gradient.addColorStop(1, baseColor);
+            
+            ctx.fillStyle = gradient;
+            ctx.beginPath();
+            ctx.moveTo(cx - radiusX, cy - height / 2);
+            ctx.lineTo(cx - radiusX, bottomY);
+            ctx.ellipse(cx, bottomY, radiusX, radiusY, 0, Math.PI, 0, true);
+            ctx.lineTo(cx + radiusX, cy - height / 2);
+            ctx.ellipse(cx, cy - height / 2, radiusX, radiusY, 0, 0, Math.PI, true);
+            ctx.closePath();
+            ctx.fill();
+            
+            // Top ellipse
+            const topGradient = ctx.createRadialGradient(cx, cy - height / 2, 0, cx, cy - height / 2, radiusX);
+            topGradient.addColorStop(0, highlightColor);
+            topGradient.addColorStop(1, baseColor);
+            ctx.fillStyle = topGradient;
+            ctx.beginPath();
+            ctx.ellipse(cx, cy - height / 2, radiusX, radiusY, 0, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Highlight rim
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.ellipse(cx, cy - height / 2, radiusX - 2, radiusY - 1, 0, Math.PI * 1.2, Math.PI * 1.8);
+            ctx.stroke();
+        }
+        
+        class Atom {
+            constructor() {
+                this.x = sourceX + 60; // Start after the oven nozzle
+                this.y = centerY + (Math.random() - 0.5) * 8;
+                this.vx = 1.8 + Math.random() * 0.2;
+                this.vy = 0;
+                
+                this.spinAxis = null;
+                this.spinValue = 0;
+                
+                this.currentStage = -1;
+                this.stageStates = [];
+                this.blocked = false;
+                this.detected = false;
+                this.trail = [];
+                this.size = 4;
+                this.targetY = centerY;
+                this.deflecting = false;
+                this.deflectionStartX = 0;
+                this.deflectionStartY = centerY;
+                this.measured = false;
+                this.stage2Measured = false;
+                this.stage2DeflectionStartY = 0;
+            }
+            
+            getColor() {
+                return getSpinColor(this.spinAxis, this.spinValue);
+            }
+            
+            measureSpin(stageAxis) {
+                if (this.spinAxis === null) {
+                    this.spinAxis = stageAxis;
+                    this.spinValue = Math.random() < 0.5 ? 1 : -1;
+                } else if (this.spinAxis === stageAxis) {
+                    // Same axis - no change
+                } else {
+                    this.spinAxis = stageAxis;
+                    this.spinValue = Math.random() < 0.5 ? 1 : -1;
+                }
+            }
+            
+            update() {
+                if (this.blocked || this.detected) return false;
+                
+                if (this.trail.length > 50) this.trail.shift();
+                this.trail.push({ 
+                    x: this.x, 
+                    y: this.y, 
+                    axis: this.spinAxis,
+                    value: this.spinValue
+                });
+                
+                const deflectionAmount = getDeflectionAmount();
+                
+                if (magneticFieldEnabled) {
+                    if (stages.length >= 1) {
+                        const pos1 = stagePositions[0];
+                        const stage1 = stages[0];
+                        
+                        if (this.x >= pos1.centerX && this.currentStage < 0 && !this.measured) {
+                            this.currentStage = 0;
+                            this.measureSpin(stage1.axis);
+                            this.deflecting = true;
+                            this.deflectionStartX = pos1.centerX;
+                            this.deflectionStartY = this.y;
+                            this.measured = true;
+                        }
+                        
+                        if (this.deflecting && this.currentStage === 0) {
+                            const deflectionEndX = pos1.endX + 60;
+                            if (this.x <= deflectionEndX) {
+                                const progress = Math.min(1, (this.x - this.deflectionStartX) / (deflectionEndX - this.deflectionStartX));
+                                const easedProgress = progress * progress;
+                                this.y = this.deflectionStartY - this.spinValue * deflectionAmount * easedProgress;
+                            }
+                        }
+                        
+                        const blockerX1 = pos1.endX + 80;
+                        if (this.x > blockerX1 && this.currentStage === 0 && !this.stageStates[0]) {
+                            this.stageStates[0] = { axis: this.spinAxis, value: this.spinValue };
+                            this.deflecting = false;
+                            
+                            if (stage1.blocker === 'plus' && this.spinValue > 0) {
+                                this.blocked = true;
+                                stats.blocked++;
+                                return false;
+                            }
+                            if (stage1.blocker === 'minus' && this.spinValue < 0) {
+                                this.blocked = true;
+                                stats.blocked++;
+                                return false;
+                            }
+                        }
+                    }
+                    
+                    if (stages.length >= 2 && this.stageStates[0]) {
+                        const pos2 = stagePositions[1];
+                        const stage2 = stages[1];
+                        
+                        if (this.x >= pos2.centerX && this.currentStage < 1 && !this.stage2Measured) {
+                            this.currentStage = 1;
+                            this.measureSpin(stage2.axis);
+                            this.deflecting = true;
+                            this.stage2DeflectionStartY = this.y;
+                            this.deflectionStartX = pos2.centerX;
+                            this.stage2Measured = true;
+                        }
+                        
+                        if (this.deflecting && this.currentStage === 1) {
+                            const deflectionEndX = pos2.endX + 50;
+                            if (this.x <= deflectionEndX) {
+                                const progress = Math.min(1, (this.x - this.deflectionStartX) / (deflectionEndX - this.deflectionStartX));
+                                const easedProgress = progress * progress;
+                                const secondaryDeflection = 50 * fieldStrength;
+                                this.y = this.stage2DeflectionStartY - this.spinValue * secondaryDeflection * easedProgress;
+                            }
+                        }
+                        
+                        const blockerX2 = pos2.endX + 70;
+                        if (this.x > blockerX2 && this.currentStage === 1 && !this.stageStates[1]) {
+                            this.stageStates[1] = { axis: this.spinAxis, value: this.spinValue };
+                            this.deflecting = false;
+                            
+                            if (stage2.blocker === 'plus' && this.spinValue > 0) {
+                                this.blocked = true;
+                                stats.blocked++;
+                                return false;
+                            }
+                            if (stage2.blocker === 'minus' && this.spinValue < 0) {
+                                this.blocked = true;
+                                stats.blocked++;
+                                return false;
+                            }
+                        }
+                    }
+                }
+                
+                this.x += this.vx;
+                
+                if (this.x >= detectorX) {
+                    this.detected = true;
+                    stats.detected++;
+                    if (this.spinValue > 0) {
+                        stats.totalPlus++;
+                    } else if (this.spinValue < 0) {
+                        stats.totalMinus++;
+                    }
+                    
+                    addDetectionSpot(this.y, this.spinAxis, this.spinValue);
+                    
+                    return false;
+                }
+                
+                if (this.y < 0 || this.y > height) {
+                    return false;
+                }
+                
+                return true;
+            }
+            
+            draw() {
+                const color = this.getColor();
+                
+                if (this.trail.length > 1) {
+                    for (let i = 1; i < this.trail.length; i++) {
+                        const prev = this.trail[i - 1];
+                        const curr = this.trail[i];
+                        const alpha = (i / this.trail.length) * 0.5;
+                        
+                        const trailColor = getSpinColor(curr.axis, curr.value);
+                        
+                        ctx.beginPath();
+                        ctx.moveTo(prev.x, prev.y);
+                        ctx.lineTo(curr.x, curr.y);
+                        ctx.strokeStyle = trailColor.rgba + alpha + ')';
+                        ctx.lineWidth = 2.5;
+                        ctx.stroke();
+                    }
+                }
+                
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fillStyle = color.hex;
+                ctx.fill();
+                
+                const gradient = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.size * 3);
+                gradient.addColorStop(0, color.rgba + '0.5)');
+                gradient.addColorStop(1, 'transparent');
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size * 3, 0, Math.PI * 2);
+                ctx.fillStyle = gradient;
+                ctx.fill();
+            }
+        }
+        
+        function drawBackground() {
+            ctx.fillStyle = '#0a0e17';
+            ctx.fillRect(0, 0, width, height);
+            
+            // 3D grid floor effect
+            ctx.strokeStyle = 'rgba(148, 163, 184, 0.08)';
+            ctx.lineWidth = 1;
+            
+            const gridSize = 50;
+            const horizonY = height * 0.3;
+            
+            // Horizontal lines with perspective
+            for (let i = 0; i < 15; i++) {
+                const y = horizonY + i * gridSize * (1 + i * 0.1);
+                if (y > height) break;
+                const alpha = 0.03 + (i / 15) * 0.05;
+                ctx.strokeStyle = `rgba(148, 163, 184, ${alpha})`;
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(width, y);
+                ctx.stroke();
+            }
+            
+            // Vertical lines with perspective convergence
+            for (let x = 0; x < width; x += gridSize) {
+                ctx.strokeStyle = 'rgba(148, 163, 184, 0.04)';
+                ctx.beginPath();
+                ctx.moveTo(x, horizonY);
+                ctx.lineTo(x, height);
+                ctx.stroke();
+            }
+        }
+        
+        // 3D Cylindrical Oven Source - similar to previous animation style
+        function drawSource() {
+            const ovenCX = sourceX;
+            const ovenCY = centerY;
+            const ovenRadiusX = 30;
+            const ovenRadiusY = 18;
+            const ovenHeight = 120;
+            
+            // Animated heat glow that pulses up and down
+            const heatPulse = 0.5 + 0.4 * Math.sin(animationTime * 0.004);
+            const heatOffset = Math.sin(animationTime * 0.003) * 10;
+            
+            // Main oven body - 3D cylinder (removed base/stand)
+            // Draw back part of cylinder first
+            const depth3D = 35;
+            
+            // Cylinder back shadow
+            ctx.fillStyle = '#1a1f2e';
+            ctx.beginPath();
+            ctx.ellipse(ovenCX + depth3D * 0.3, ovenCY - depth3D * 0.15, ovenRadiusX, ovenRadiusY, 0, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Main cylinder body with metallic gradient
+            const bodyGradient = ctx.createLinearGradient(ovenCX - ovenRadiusX, 0, ovenCX + ovenRadiusX, 0);
+            bodyGradient.addColorStop(0, '#2d3748');
+            bodyGradient.addColorStop(0.2, '#4a5568');
+            bodyGradient.addColorStop(0.4, '#718096');
+            bodyGradient.addColorStop(0.6, '#4a5568');
+            bodyGradient.addColorStop(1, '#2d3748');
+            
+            // Bottom ellipse
+            ctx.fillStyle = '#1f2937';
+            ctx.beginPath();
+            ctx.ellipse(ovenCX, ovenCY + ovenHeight / 2, ovenRadiusX, ovenRadiusY, 0, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Cylinder body
+            ctx.fillStyle = bodyGradient;
+            ctx.beginPath();
+            ctx.moveTo(ovenCX - ovenRadiusX, ovenCY - ovenHeight / 2);
+            ctx.lineTo(ovenCX - ovenRadiusX, ovenCY + ovenHeight / 2);
+            ctx.ellipse(ovenCX, ovenCY + ovenHeight / 2, ovenRadiusX, ovenRadiusY, 0, Math.PI, 0, true);
+            ctx.lineTo(ovenCX + ovenRadiusX, ovenCY - ovenHeight / 2);
+            ctx.ellipse(ovenCX, ovenCY - ovenHeight / 2, ovenRadiusX, ovenRadiusY, 0, 0, Math.PI, true);
+            ctx.closePath();
+            ctx.fill();
+            
+            // Animated heat glow bands on the cylinder (pulsing up and down)
+            for (let i = 0; i < 5; i++) {
+                const bandY = ovenCY - ovenHeight / 2 + 20 + i * 22 + heatOffset;
+                const bandIntensity = heatPulse * (0.3 + 0.2 * Math.sin(animationTime * 0.005 + i));
+                
+                if (bandY > ovenCY - ovenHeight / 2 + 10 && bandY < ovenCY + ovenHeight / 2 - 10) {
+                    const bandGradient = ctx.createLinearGradient(ovenCX - ovenRadiusX, 0, ovenCX + ovenRadiusX, 0);
+                    bandGradient.addColorStop(0, `rgba(251, 146, 60, 0)`);
+                    bandGradient.addColorStop(0.3, `rgba(251, 146, 60, ${bandIntensity})`);
+                    bandGradient.addColorStop(0.5, `rgba(239, 68, 68, ${bandIntensity * 1.2})`);
+                    bandGradient.addColorStop(0.7, `rgba(251, 146, 60, ${bandIntensity})`);
+                    bandGradient.addColorStop(1, `rgba(251, 146, 60, 0)`);
+                    
+                    ctx.fillStyle = bandGradient;
+                    ctx.fillRect(ovenCX - ovenRadiusX, bandY - 4, ovenRadiusX * 2, 8);
+                }
+            }
+            
+            // Top ellipse with heat glow
+            const topGradient = ctx.createRadialGradient(ovenCX, ovenCY - ovenHeight / 2, 0, ovenCX, ovenCY - ovenHeight / 2, ovenRadiusX);
+            topGradient.addColorStop(0, `rgba(251, 146, 60, ${heatPulse * 0.6})`);
+            topGradient.addColorStop(0.5, '#4a5568');
+            topGradient.addColorStop(1, '#2d3748');
+            ctx.fillStyle = topGradient;
+            ctx.beginPath();
+            ctx.ellipse(ovenCX, ovenCY - ovenHeight / 2, ovenRadiusX, ovenRadiusY, 0, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Metallic rim highlight
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.ellipse(ovenCX, ovenCY - ovenHeight / 2, ovenRadiusX - 3, ovenRadiusY - 2, 0, Math.PI * 1.1, Math.PI * 1.9);
+            ctx.stroke();
+            
+            // Overall heat glow around oven
+            const ovenGlow = ctx.createRadialGradient(ovenCX, ovenCY, 0, ovenCX, ovenCY, ovenHeight * 0.7);
+            ovenGlow.addColorStop(0, `rgba(251, 146, 60, ${heatPulse * 0.15})`);
+            ovenGlow.addColorStop(0.5, `rgba(239, 68, 68, ${heatPulse * 0.08})`);
+            ovenGlow.addColorStop(1, 'transparent');
+            ctx.fillStyle = ovenGlow;
+            ctx.beginPath();
+            ctx.arc(ovenCX, ovenCY, ovenHeight * 0.7, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // 3D Nozzle/aperture extending to the right
+            const nozzleStartX = ovenCX + ovenRadiusX - 5;
+            const nozzleLength = 45;
+            const nozzleHeight = 20;
+            const nozzleDepth = 18;
+            
+            // Nozzle body - tapered 3D shape
+            ctx.fillStyle = '#4a5568';
+            ctx.beginPath();
+            ctx.moveTo(nozzleStartX, ovenCY - nozzleHeight / 2);
+            ctx.lineTo(nozzleStartX + nozzleLength, ovenCY - 6);
+            ctx.lineTo(nozzleStartX + nozzleLength, ovenCY + 6);
+            ctx.lineTo(nozzleStartX, ovenCY + nozzleHeight / 2);
+            ctx.closePath();
+            ctx.fill();
+            
+            // Nozzle top face
+            ctx.fillStyle = '#64748b';
+            ctx.beginPath();
+            ctx.moveTo(nozzleStartX, ovenCY - nozzleHeight / 2);
+            ctx.lineTo(nozzleStartX + nozzleLength, ovenCY - 6);
+            ctx.lineTo(nozzleStartX + nozzleLength + nozzleDepth * 0.5, ovenCY - 6 - nozzleDepth * 0.3);
+            ctx.lineTo(nozzleStartX + nozzleDepth * 0.5, ovenCY - nozzleHeight / 2 - nozzleDepth * 0.3);
+            ctx.closePath();
+            ctx.fill();
+            
+            // Nozzle opening glow
+            const nozzleGlow = ctx.createRadialGradient(
+                nozzleStartX + nozzleLength, ovenCY, 0,
+                nozzleStartX + nozzleLength, ovenCY, 25
+            );
+            nozzleGlow.addColorStop(0, `rgba(163, 230, 53, ${heatPulse * 0.9})`);
+            nozzleGlow.addColorStop(0.3, `rgba(251, 146, 60, ${heatPulse * 0.5})`);
+            nozzleGlow.addColorStop(1, 'transparent');
+            ctx.fillStyle = nozzleGlow;
+            ctx.beginPath();
+            ctx.arc(nozzleStartX + nozzleLength, ovenCY, 25, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Emission particles coming out of nozzle
+            ctx.fillStyle = `rgba(163, 230, 53, ${heatPulse * 0.7})`;
+            for (let i = 0; i < 5; i++) {
+                const particleX = nozzleStartX + nozzleLength + 8 + ((animationTime * 0.08 + i * 15) % 40);
+                const particleY = ovenCY + Math.sin(animationTime * 0.015 + i * 1.5) * 4;
+                const particleSize = 2.5 - ((animationTime * 0.08 + i * 15) % 40) / 40 * 1.5;
+                if (particleSize > 0.5) {
+                    ctx.beginPath();
+                    ctx.arc(particleX, particleY, particleSize, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+            
+            // Label (only Ag Source, removed temperature)
+            ctx.fillStyle = '#94a3b8';
+            ctx.font = 'bold 12px -apple-system, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('Ag Source', ovenCX, ovenCY + ovenHeight / 2 + 25);
+        }
+        
+        // 3D Magnet with horseshoe shape - removed the grey yoke
+        function draw3DMagnet(pos, stage, index) {
+            if (index !== 0) return;
+            
+            const magnetWidth = pos.endX - pos.startX;
+            const poleHeight = 55;
+            const gapFromCenter = 65;
+            const depth3D = 40;
+            
+            const isZAxis = stage.axis === 'z';
+            const alphaMultiplier = magneticFieldEnabled ? 1.0 : 0.3;
+            
+            ctx.save();
+            if (!magneticFieldEnabled) {
+                ctx.globalAlpha = 0.4;
+            }
+            
+            // North pole (top) - 3D box with pointed tip
+            const northTopY = centerY - gapFromCenter - poleHeight;
+            const northBottomY = centerY - gapFromCenter;
+            
+            // North pole main body
+            draw3DBox(
+                pos.startX, northTopY,
+                magnetWidth, poleHeight - 15, depth3D,
+                '#b91c1c', '#dc2626', '#991b1b', true
+            );
+            
+            // North pole pointed tip (triangular prism)
+            const tipHeight = 25;
+            ctx.fillStyle = '#dc2626';
+            ctx.beginPath();
+            ctx.moveTo(pos.startX, northBottomY - 15);
+            ctx.lineTo(pos.endX, northBottomY - 15);
+            ctx.lineTo(pos.centerX, northBottomY + tipHeight - 15);
+            ctx.closePath();
+            ctx.fill();
+            
+            // Tip side face
+            ctx.fillStyle = '#b91c1c';
+            ctx.beginPath();
+            ctx.moveTo(pos.endX, northBottomY - 15);
+            ctx.lineTo(pos.endX + depth3D * 0.7, northBottomY - 15 - depth3D * 0.5);
+            ctx.lineTo(pos.centerX + depth3D * 0.35, northBottomY + tipHeight - 15 - depth3D * 0.25);
+            ctx.lineTo(pos.centerX, northBottomY + tipHeight - 15);
+            ctx.closePath();
+            ctx.fill();
+            
+            // South pole (bottom) - 3D box
+            const southTopY = centerY + gapFromCenter;
+            const southBottomY = centerY + gapFromCenter + poleHeight;
+            
+            draw3DBox(
+                pos.startX, southTopY,
+                magnetWidth, poleHeight, depth3D,
+                '#1d4ed8', '#2563eb', '#1e40af', true
+            );
+            
+            // Field lines (if enabled)
+            if (magneticFieldEnabled) {
+                const lineAlpha = 0.15 + 0.1 * fieldStrength;
+                ctx.strokeStyle = `rgba(255, 255, 255, ${Math.min(0.35, lineAlpha)})`;
+                ctx.lineWidth = 1.5 + fieldStrength * 0.5;
+                
+                const numFieldLines = Math.floor(4 + fieldStrength * 2);
+                for (let i = 0; i < numFieldLines; i++) {
+                    const t = (i + 1) / (numFieldLines + 1);
+                    const startX = pos.startX + magnetWidth * t;
+                    const startY = northBottomY + tipHeight - 10;
+                    const endY = southTopY + 5;
+                    const curveOffset = (t - 0.5) * 35;
+                    
+                    ctx.beginPath();
+                    ctx.moveTo(startX, startY);
+                    ctx.bezierCurveTo(
+                        startX + curveOffset, startY + (endY - startY) * 0.3,
+                        startX + curveOffset * 0.5, startY + (endY - startY) * 0.7,
+                        startX, endY
+                    );
+                    ctx.stroke();
+                    
+                    // Arrow
+                    const midY = (startY + endY) / 2;
+                    const arrowX = startX + curveOffset * 0.7;
+                    ctx.beginPath();
+                    ctx.moveTo(arrowX - 3, midY - 4);
+                    ctx.lineTo(arrowX, midY);
+                    ctx.lineTo(arrowX + 3, midY - 4);
+                    ctx.stroke();
+                }
+                
+                // Glow at tip
+                const glowIntensity = (0.3 + 0.1 * Math.sin(animationTime * 0.003)) * fieldStrength;
+                const tipGlow = ctx.createRadialGradient(
+                    pos.centerX, northBottomY + tipHeight - 15, 0,
+                    pos.centerX, northBottomY + tipHeight - 15, 35 * fieldStrength
+                );
+                tipGlow.addColorStop(0, `rgba(255, 100, 100, ${Math.min(0.5, glowIntensity)})`);
+                tipGlow.addColorStop(1, 'transparent');
+                ctx.fillStyle = tipGlow;
+                ctx.beginPath();
+                ctx.arc(pos.centerX, northBottomY + tipHeight - 15, 35 * fieldStrength, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            
+            ctx.globalAlpha = 1.0;
+            
+            // Labels
+            ctx.fillStyle = '#fff';
+            ctx.font = 'bold 18px -apple-system, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('N', pos.centerX, northTopY + poleHeight / 2 - 5);
+            ctx.fillText('S', pos.centerX, southTopY + poleHeight / 2 + 8);
+            
+            ctx.fillStyle = '#94a3b8';
+            ctx.font = '12px -apple-system, sans-serif';
+            const axisLabel = isZAxis ? 'SG-Z' : 'SG-X';
+            const statusLabel = magneticFieldEnabled ? ` (${Math.round(fieldStrength * 100)}%)` : ' (OFF)';
+            ctx.fillText(`Stage 1: ${axisLabel}${statusLabel}`, pos.centerX, southBottomY + 30);
+            
+            ctx.restore();
+        }
+        
+        function drawStage2Apparatus(pos, stage, index) {
+            if (index !== 1) return;
+            
+            const isZAxis = stage.axis === 'z';
+            // Changed Z-axis color from pink to orange
+            const primaryColor = isZAxis ? '#f97316' : '#a78bfa'; // Orange for Z, purple for X
+            const axisLabel = isZAxis ? 'Z' : 'X';
+            
+            const deflectionAmount = getDeflectionAmount();
+            const upperBeamY = centerY - deflectionAmount;
+            const lowerBeamY = centerY + deflectionAmount;
+            
+            const boxWidth = 60;
+            const boxHeight = 45;
+            const depth3D = 25;
+            
+            ctx.save();
+            
+            // Apply transparency to 2nd stage magnets (0.6 = 60% opacity)
+            const stage2Transparency = 0.6;
+            
+            if (!magneticFieldEnabled) {
+                ctx.globalAlpha = 0.4 * stage2Transparency;
+            } else {
+                ctx.globalAlpha = stage2Transparency;
+            }
+            
+            // Upper measurement box - 3D with updated colors
+            draw3DBox(
+                pos.centerX - boxWidth / 2, upperBeamY - boxHeight / 2,
+                boxWidth, boxHeight, depth3D,
+                isZAxis ? '#c2410c' : '#7c3aed',  // Darker orange for Z, purple for X
+                isZAxis ? '#f97316' : '#a78bfa',  // Orange for Z, purple for X
+                isZAxis ? '#9a3412' : '#6d28d9'   // Even darker orange for Z, purple for X
+            );
+            
+            // Lower measurement box - 3D with updated colors
+            draw3DBox(
+                pos.centerX - boxWidth / 2, lowerBeamY - boxHeight / 2,
+                boxWidth, boxHeight, depth3D,
+                isZAxis ? '#c2410c' : '#7c3aed',
+                isZAxis ? '#f97316' : '#a78bfa',
+                isZAxis ? '#9a3412' : '#6d28d9'
+            );
+            
+            // Mini magnets inside boxes
+            [upperBeamY, lowerBeamY].forEach(y => {
+                // N pole indicator
+                ctx.fillStyle = '#dc2626';
+                ctx.beginPath();
+                ctx.moveTo(pos.centerX - 8, y - 10);
+                ctx.lineTo(pos.centerX + 8, y - 10);
+                ctx.lineTo(pos.centerX, y - 2);
+                ctx.closePath();
+                ctx.fill();
+                
+                // S pole indicator
+                ctx.fillStyle = '#2563eb';
+                ctx.fillRect(pos.centerX - 8, y + 4, 16, 8);
+            });
+            
+            ctx.globalAlpha = 1.0;
+            
+            ctx.fillStyle = '#94a3b8';
+            ctx.font = '12px -apple-system, sans-serif';
+            ctx.textAlign = 'center';
+            const statusLabel = magneticFieldEnabled ? ` (${Math.round(fieldStrength * 100)}%)` : ' (OFF)';
+            ctx.fillText(`Stage 2: SG-${axisLabel}${statusLabel}`, pos.centerX, lowerBeamY + boxHeight / 2 + 30);
+            
+            ctx.restore();
+        }
+        
+        function drawBlocker(pos, stage, index) {
+            if (stage.blocker === 'none') return;
+            
+            // Move blocker further away from magnet to avoid overlap
+            const blockerX = pos.endX + 120; // Increased from 60 to 120
+            const blockerWidth = 20;
+            const blockerHeight = 45;
+            const depth3D = 15;
+            
+            const deflectionAmount = getDeflectionAmount();
+            
+            let blockerY;
+            if (index === 0) {
+                blockerY = stage.blocker === 'plus' 
+                    ? centerY - deflectionAmount - blockerHeight / 2
+                    : centerY + deflectionAmount - blockerHeight / 2;
+                draw3DBlocker(blockerX, blockerY, blockerWidth, blockerHeight, depth3D, stage.blocker);
+            } else {
+                const baseY = stage.blocker === 'plus' ? -50 * fieldStrength : 50 * fieldStrength;
+                draw3DBlocker(blockerX, centerY - deflectionAmount + baseY - blockerHeight / 2, blockerWidth, blockerHeight, depth3D, stage.blocker);
+                draw3DBlocker(blockerX, centerY + deflectionAmount + baseY - blockerHeight / 2, blockerWidth, blockerHeight, depth3D, stage.blocker);
+            }
+        }
+        
+        function draw3DBlocker(x, y, w, h, depth, type) {
+            const pulseIntensity = 0.5 + 0.3 * Math.sin(animationTime * 0.005);
+            
+            // 3D blocker box
+            draw3DBox(
+                x, y, w, h, depth,
+                '#7f1d1d', '#991b1b', '#6b1a1a'
+            );
+            
+            // Warning glow
+            const warningGlow = ctx.createRadialGradient(x + w/2, y + h/2, 0, x + w/2, y + h/2, 40);
+            warningGlow.addColorStop(0, `rgba(239, 68, 68, ${pulseIntensity * 0.3})`);
+            warningGlow.addColorStop(1, 'transparent');
+            ctx.fillStyle = warningGlow;
+            ctx.beginPath();
+            ctx.arc(x + w/2, y + h/2, 40, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // X mark
+            ctx.strokeStyle = '#fca5a5';
+            ctx.lineWidth = 3;
+            ctx.lineCap = 'round';
+            ctx.beginPath();
+            ctx.moveTo(x + 5, y + 10);
+            ctx.lineTo(x + w - 5, y + h - 10);
+            ctx.moveTo(x + w - 5, y + 10);
+            ctx.lineTo(x + 5, y + h - 10);
+            ctx.stroke();
+            ctx.lineCap = 'butt';
+            
+            // Label
+            ctx.fillStyle = '#fca5a5';
+            ctx.font = 'bold 9px -apple-system, sans-serif';
+            ctx.textAlign = 'center';
+            const labelY = type === 'plus' ? y - 8 : y + h + 15;
+            ctx.fillText(`BLOCK ${type === 'plus' ? '+' : '−'}`, x + w/2, labelY);
+        }
+        
+        // 3D Detector screen - removed stand/base
+        function drawDetector() {
+            const detectorWidth = 30;
+            const screenHeight = height * 0.7;
+            const depth3D = 50;
+            
+            const screenX = detectorX - detectorWidth / 2;
+            const screenY = centerY - screenHeight / 2;
+            
+            // Back panel (3D depth)
+            ctx.fillStyle = '#0f172a';
+            ctx.beginPath();
+            ctx.moveTo(screenX + detectorWidth, screenY);
+            ctx.lineTo(screenX + detectorWidth + depth3D * 0.7, screenY - depth3D * 0.5);
+            ctx.lineTo(screenX + detectorWidth + depth3D * 0.7, screenY + screenHeight - depth3D * 0.5);
+            ctx.lineTo(screenX + detectorWidth, screenY + screenHeight);
+            ctx.closePath();
+            ctx.fill();
+            
+            // Top edge
+            ctx.fillStyle = '#1e293b';
+            ctx.beginPath();
+            ctx.moveTo(screenX, screenY);
+            ctx.lineTo(screenX + detectorWidth, screenY);
+            ctx.lineTo(screenX + detectorWidth + depth3D * 0.7, screenY - depth3D * 0.5);
+            ctx.lineTo(screenX + depth3D * 0.7, screenY - depth3D * 0.5);
+            ctx.closePath();
+            ctx.fill();
+            
+            // Main screen face with gradient
+            const screenGradient = ctx.createLinearGradient(screenX, 0, screenX + detectorWidth, 0);
+            screenGradient.addColorStop(0, '#1e293b');
+            screenGradient.addColorStop(0.3, '#334155');
+            screenGradient.addColorStop(0.7, '#334155');
+            screenGradient.addColorStop(1, '#1e293b');
+            
+            ctx.fillStyle = screenGradient;
+            ctx.beginPath();
+            ctx.roundRect(screenX, screenY, detectorWidth, screenHeight, 4);
+            ctx.fill();
+            
+            // Screen surface glow
+            const surfaceGlow = ctx.createRadialGradient(
+                detectorX, centerY, 0,
+                detectorX, centerY, screenHeight / 2
+            );
+            surfaceGlow.addColorStop(0, 'rgba(100, 150, 200, 0.1)');
+            surfaceGlow.addColorStop(1, 'transparent');
+            ctx.fillStyle = surfaceGlow;
+            ctx.fillRect(screenX, screenY, detectorWidth, screenHeight);
+            
+            // Frame edges
+            ctx.strokeStyle = '#475569';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.roundRect(screenX, screenY, detectorWidth, screenHeight, 4);
+            ctx.stroke();
+            
+            // Highlight edge
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(screenX + 3, screenY + 5);
+            ctx.lineTo(screenX + 3, screenY + screenHeight - 5);
+            ctx.stroke();
+            
+            // Label (moved up since no stand)
+            ctx.fillStyle = '#94a3b8';
+            ctx.font = '12px -apple-system, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('Detector Screen', detectorX, screenY + screenHeight + 20);
+        }
+        
+        function drawDetectionSpots() {
+            for (let i = 0; i < detectionSpots.length; i++) {
+                const spot = detectionSpots[i];
+                
+                const age = animationTime - spot.createdAt;
+                const fadeStart = 10000;
+                const fadeDuration = 20000;
+                let alpha = 1.0;
+                
+                if (age > fadeStart) {
+                    alpha = Math.max(0.3, 1.0 - (age - fadeStart) / fadeDuration);
+                }
+                
+                const glowRadius = spot.size * 2.5;
+                const spotGlow = ctx.createRadialGradient(
+                    spot.x, spot.y, 0,
+                    spot.x, spot.y, glowRadius
+                );
+                spotGlow.addColorStop(0, spot.color.rgba + (alpha * 0.8) + ')');
+                spotGlow.addColorStop(0.5, spot.color.rgba + (alpha * 0.4) + ')');
+                spotGlow.addColorStop(1, 'transparent');
+                
+                ctx.fillStyle = spotGlow;
+                ctx.beginPath();
+                ctx.arc(spot.x, spot.y, glowRadius, 0, Math.PI * 2);
+                ctx.fill();
+                
+                ctx.beginPath();
+                ctx.arc(spot.x, spot.y, spot.size, 0, Math.PI * 2);
+                ctx.fillStyle = spot.color.rgba + alpha + ')';
+                ctx.fill();
+            }
+        }
+        
+        function drawBeamPath() {
+            ctx.setLineDash([5, 5]);
+            ctx.lineWidth = 1;
+            
+            const deflectionAmount = getDeflectionAmount();
+            
+            // Path from source to first magnet - now longer due to increased spacing
+            ctx.strokeStyle = 'rgba(163, 230, 53, 0.3)';
+            ctx.beginPath();
+            ctx.moveTo(sourceX + 60, centerY); // Start after nozzle
+            if (stagePositions.length > 0) {
+                ctx.lineTo(stagePositions[0].centerX, centerY);
+            } else {
+                ctx.lineTo(detectorX, centerY);
+            }
+            ctx.stroke();
+            
+            if (magneticFieldEnabled && stagePositions.length >= 1) {
+                const pos1 = stagePositions[0];
+                
+                ctx.strokeStyle = 'rgba(244, 114, 182, 0.25)';
+                ctx.beginPath();
+                ctx.moveTo(pos1.centerX, centerY);
+                ctx.quadraticCurveTo(
+                    pos1.endX + 30, centerY - deflectionAmount * 0.5,
+                    pos1.endX + 60, centerY - deflectionAmount
+                );
+                if (stages.length === 1) {
+                    ctx.lineTo(detectorX, centerY - deflectionAmount);
+                } else {
+                    ctx.lineTo(stagePositions[1].startX, centerY - deflectionAmount);
+                }
+                ctx.stroke();
+                
+                ctx.strokeStyle = 'rgba(96, 165, 250, 0.25)';
+                ctx.beginPath();
+                ctx.moveTo(pos1.centerX, centerY);
+                ctx.quadraticCurveTo(
+                    pos1.endX + 30, centerY + deflectionAmount * 0.5,
+                    pos1.endX + 60, centerY + deflectionAmount
+                );
+                if (stages.length === 1) {
+                    ctx.lineTo(detectorX, centerY + deflectionAmount);
+                } else {
+                    ctx.lineTo(stagePositions[1].startX, centerY + deflectionAmount);
+                }
+                ctx.stroke();
+            } else if (!magneticFieldEnabled && stagePositions.length >= 1) {
+                ctx.strokeStyle = 'rgba(163, 230, 53, 0.2)';
+                ctx.beginPath();
+                ctx.moveTo(stagePositions[0].centerX, centerY);
+                ctx.lineTo(detectorX, centerY);
+                ctx.stroke();
+            }
+            
+            if (magneticFieldEnabled && stagePositions.length >= 2) {
+                const pos2 = stagePositions[1];
+                const secondaryDeflection = 50 * fieldStrength;
+                
+                ctx.strokeStyle = 'rgba(244, 114, 182, 0.2)';
+                ctx.beginPath();
+                ctx.moveTo(pos2.centerX, centerY - deflectionAmount);
+                ctx.lineTo(detectorX, centerY - deflectionAmount - secondaryDeflection);
+                ctx.stroke();
+                
+                ctx.strokeStyle = 'rgba(96, 165, 250, 0.2)';
+                ctx.beginPath();
+                ctx.moveTo(pos2.centerX, centerY - deflectionAmount);
+                ctx.lineTo(detectorX, centerY - deflectionAmount + secondaryDeflection);
+                ctx.stroke();
+                
+                ctx.strokeStyle = 'rgba(167, 139, 250, 0.2)';
+                ctx.beginPath();
+                ctx.moveTo(pos2.centerX, centerY + deflectionAmount);
+                ctx.lineTo(detectorX, centerY + deflectionAmount - secondaryDeflection);
+                ctx.stroke();
+                
+                ctx.strokeStyle = 'rgba(52, 211, 153, 0.2)';
+                ctx.beginPath();
+                ctx.moveTo(pos2.centerX, centerY + deflectionAmount);
+                ctx.lineTo(detectorX, centerY + deflectionAmount + secondaryDeflection);
+                ctx.stroke();
+            }
+            
+            ctx.setLineDash([]);
+        }
+        
+        function emitAtom() {
+            atoms.push(new Atom());
+            stats.total++;
+        }
+        
+        function updateStats() {
+            document.getElementById('totalAtoms').textContent = stats.total;
+            document.getElementById('detectedAtoms').textContent = stats.detected;
+            document.getElementById('blockedAtoms').textContent = stats.blocked;
+            document.getElementById('totalPlus').textContent = stats.totalPlus;
+            document.getElementById('totalMinus').textContent = stats.totalMinus;
+        }
+        
+        function renderStageControls() {
+            const container = document.getElementById('stagesContainer');
+            container.innerHTML = '';
+            
+            stages.forEach((stage, index) => {
+                const div = document.createElement('div');
+                div.className = 'stage-config';
+                div.innerHTML = `
+                    <div class="stage-header">
+                        <span class="stage-title ${stage.axis}-axis">Stage ${index + 1}: ${stage.axis.toUpperCase()}-Axis</span>
+                        ${stages.length > 1 ? `<button class="remove-stage" data-index="${index}">✕</button>` : ''}
+                    </div>
+                    <div class="stage-controls">
+                        <div class="stage-control">
+                            <label>Orientation</label>
+                            <select class="axis-select" data-index="${index}">
+                                <option value="z" ${stage.axis === 'z' ? 'selected' : ''}>Z-Axis (↑↓)</option>
+                                <option value="x" ${stage.axis === 'x' ? 'selected' : ''}>X-Axis (←→)</option>
+                            </select>
+                        </div>
+                        <div class="stage-control">
+                            <label>Blocker</label>
+                            <select class="blocker-select" data-index="${index}">
+                                <option value="none" ${stage.blocker === 'none' ? 'selected' : ''}>None</option>
+                                <option value="plus" ${stage.blocker === 'plus' ? 'selected' : ''}>Block +</option>
+                                <option value="minus" ${stage.blocker === 'minus' ? 'selected' : ''}>Block −</option>
+                            </select>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+            
+            document.querySelectorAll('.axis-select').forEach(select => {
+                select.addEventListener('change', (e) => {
+                    const index = parseInt(e.target.dataset.index);
+                    stages[index].axis = e.target.value;
+                    renderStageControls();
+                    reset();
+                });
+            });
+            
+            document.querySelectorAll('.blocker-select').forEach(select => {
+                select.addEventListener('change', (e) => {
+                    const index = parseInt(e.target.dataset.index);
+                    stages[index].blocker = e.target.value;
+                    reset();
+                });
+            });
+            
+            document.querySelectorAll('.remove-stage').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const index = parseInt(e.target.dataset.index);
+                    stages.splice(index, 1);
+                    calculateStagePositions();
+                    renderStageControls();
+                    reset();
+                });
+            });
+            
+            document.getElementById('addStage').disabled = stages.length >= 2;
+        }
+        
+        function animate(currentTime) {
+            animationTime = currentTime;
+            
+            const emitInterval = 1000 / emissionRate;
+            if (currentTime - lastEmitTime > emitInterval) {
+                emitAtom();
+                lastEmitTime = currentTime;
+            }
+            
+            drawBackground();
+            drawBeamPath();
+            drawSource();
+            
+            for (let i = 0; i < stages.length; i++) {
+                const pos = stagePositions[i];
+                const stage = stages[i];
+                
+                draw3DMagnet(pos, stage, i);
+                drawStage2Apparatus(pos, stage, i);
+                drawBlocker(pos, stage, i);
+            }
+            
+            drawDetector();
+            drawDetectionSpots();
+            
+            atoms = atoms.filter(atom => {
+                const alive = atom.update();
+                if (!atom.blocked) {
+                    atom.draw();
+                }
+                return alive;
+            });
+            
+            updateStats();
+            
+            requestAnimationFrame(animate);
+        }
+        
+        function reset() {
+            atoms = [];
+            detectionSpots = [];
+            stats = {
+                total: 0,
+                detected: 0,
+                blocked: 0,
+                totalPlus: 0,
+                totalMinus: 0
+            };
+        }
+        
+        function clearScreenSpots() {
+            detectionSpots = [];
+        }
+        
+        function resetSimulation() {
+            stages = [
+                { axis: 'z', blocker: 'none' }
+            ];
+            calculateStagePositions();
+            renderStageControls();
+            reset();
+        }
+        
+        function toggleMagneticField() {
+            magneticFieldEnabled = !magneticFieldEnabled;
+            const toggle = document.getElementById('magneticFieldToggle');
+            const status = document.getElementById('magneticFieldStatus');
+            
+            if (magneticFieldEnabled) {
+                toggle.classList.add('active');
+                status.textContent = 'ON';
+                status.style.color = '#f1f5f9';
+            } else {
+                toggle.classList.remove('active');
+                status.textContent = 'OFF';
+                status.style.color = '#94a3b8';
+            }
+        }
+        
+        document.getElementById('emissionRate').addEventListener('input', (e) => {
+            emissionRate = parseInt(e.target.value);
+            document.getElementById('emissionValue').textContent = emissionRate;
+        });
+        
+        document.getElementById('magneticFieldToggle').addEventListener('click', toggleMagneticField);
+        
+        document.getElementById('fieldStrength').addEventListener('input', (e) => {
+            fieldStrength = parseInt(e.target.value) / 100;
+            document.getElementById('fieldStrengthValue').textContent = Math.round(fieldStrength * 100);
+        });
+        
+        document.getElementById('addStage').addEventListener('click', () => {
+            if (stages.length < 2) {
+                stages.push({ axis: 'z', blocker: 'none' });
+                calculateStagePositions();
+                renderStageControls();
+                reset();
+            }
+        });
+        
+        document.getElementById('reset').addEventListener('click', reset);
+        document.getElementById('resetSimulation').addEventListener('click', resetSimulation);
+        document.getElementById('clearScreen').addEventListener('click', clearScreenSpots);
+        
+        window.addEventListener('resize', resize);
+        
+        resize();
+        renderStageControls();
+        requestAnimationFrame(animate);
+    </script>
+</body>
+</html>

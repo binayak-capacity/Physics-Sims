@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Double-Slit Experiment</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        :root {
+            --bg-color: #111827;
+            --panel-bg: #1f2937;
+            --accent-blue: #3b82f6;
+            --text-main: #f3f4f6;
+            --text-muted: #9ca3af;
+            --border-color: #374151;
+            --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+
+        body { margin: 0; overflow: hidden; background-color: var(--bg-color); font-family: var(--font-family); }
+
+        /* --- TOP TITLE BAR --- */
+        .top-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 60px;
+            background: linear-gradient(135deg, var(--panel-bg) 0%, #111827 100%);
+            border-bottom: 2px solid var(--accent-blue);
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            padding-left: 30px;
+            box-sizing: border-box;
+            z-index: 200;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+        }
+        .top-bar h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-main);
+            margin: 0;
+            letter-spacing: 0.05em;
+        }
+        .top-bar-accent {
+            width: 8px;
+            height: 8px;
+            background: var(--accent-blue);
+            border-radius: 50%;
+            margin-right: 15px;
+            box-shadow: 0 0 10px var(--accent-blue);
+        }
+
+        #canvas-container { position: fixed; top: 60px; left: 0; width: 100%; height: calc(100% - 60px); z-index: 1; }
+
+        /* --- SIDEBAR --- */
+        .sidebar {
+            position: fixed; 
+            top: 60px; 
+            right: 20px; 
+            width: 320px;
+            background-color: var(--panel-bg);
+            border-radius: 0 0 8px 8px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            color: var(--text-main);
+            z-index: 100;
+            display: flex; flex-direction: column;
+            border: 1px solid var(--border-color);
+            border-top: 2px solid var(--accent-blue);
+            max-height: calc(100vh - 80px);
+            overflow-y: auto;
+        }
+
+        .header {
+            padding: 15px 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .header p { font-size: 0.85rem; color: var(--text-muted); margin: 0; }
+        .header-bar { height: 4px; width: 40%; background: var(--accent-blue); margin-top: 10px; border-radius: 2px; }
+
+        .content { padding: 20px; display: flex; flex-direction: column; gap: 20px; }
+
+        .section-title {
+            font-size: 0.75rem; font-weight: 700; color: var(--text-muted);
+            text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 10px;
+        }
+
+        /* CONTROLS */
+        .control-group { margin-bottom: 15px; }
+        .control-label { display: flex; justify-content: space-between; font-size: 0.9rem; margin-bottom: 8px; }
+        
+        /* MODE TOGGLE BUTTONS */
+        .btn-group { display: flex; background: #111827; border-radius: 6px; padding: 4px; border: 1px solid var(--border-color); }
+        .mode-btn {
+            flex: 1; padding: 8px; border: none; background: transparent; color: var(--text-muted);
+            font-size: 0.8rem; font-weight: 600; cursor: pointer; border-radius: 4px; transition: 0.2s;
+        }
+        .mode-btn.active { background: var(--accent-blue); color: white; }
+        .mode-btn:hover:not(.active) { color: white; }
+
+        /* SLIDERS */
+        input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; cursor: pointer; }
+        input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 6px; background: #374151; border-radius: 3px; }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none; height: 18px; width: 18px; border-radius: 50%;
+            background: var(--accent-blue); border: 2px solid white; margin-top: -6px;
+        }
+        .disabled-control { opacity: 0.3; pointer-events: none; transition: opacity 0.3s; }
+
+        /* STATS */
+        .stat-row { display: flex; justify-content: space-between; font-size: 0.9rem; margin-bottom: 8px; }
+        .stat-val { font-weight: 700; font-family: monospace; }
+
+        /* BUTTON */
+        .btn-primary {
+            width: 100%; padding: 12px; background-color: var(--accent-blue);
+            color: white; border: none; border-radius: 6px; font-weight: 600;
+            cursor: pointer; transition: background 0.2s;
+        }
+        .btn-primary:hover { background-color: #2563eb; }
+
+        /* CHART */
+        #chart-container {
+            background: #111827; border-radius: 6px; padding: 15px 10px 5px 10px;
+            height: 160px; border: 1px solid var(--border-color);
+        }
+
+        /* INTENSITY DISTRIBUTION */
+        #intensity-container {
+            background: #111827; border-radius: 6px; padding: 15px 10px 5px 10px;
+            height: 180px; border: 1px solid var(--border-color);
+        }
+        .intensity-description {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 8px;
+            line-height: 1.4;
+            text-align: center;
+        }
+        .intensity-description .highlight {
+            color: var(--accent-blue);
+            font-weight: 600;
+        }
+
+        /* ABOUT SECTION */
+        .about-section {
+            background: #111827;
+            border-radius: 6px;
+            padding: 15px;
+            border: 1px solid var(--border-color);
+        }
+        .about-section p {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            line-height: 1.6;
+            margin: 0;
+        }
+        .about-section .highlight {
+            color: var(--accent-blue);
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- TOP TITLE BAR -->
+    <div class="top-bar">
+        <div class="top-bar-accent"></div>
+        <h1>Double Slit Experiment</h1>
+    </div>
+
+    <div id="canvas-container">
+        <canvas id="main-canvas"></canvas>
+    </div>
+
+    <div class="sidebar">
+        <div class="header">
+            <p>Simulator Controls</p>
+            <div class="header-bar"></div>
+        </div>
+
+        <div class="content">
+            <div>
+                <div class="section-title">Simulation Mode</div>
+                <div class="btn-group">
+                    <button id="btn-wave" class="mode-btn active">Quantum Particle</button>
+                    <button id="btn-particle" class="mode-btn">Classical Particle</button>
+                </div>
+            </div>
+
+            <div>
+                <div class="section-title">Parameters</div>
+                <div class="control-group">
+                    <div class="control-label"><span>Slit Separation</span></div>
+                    <input type="range" id="slit-sep" min="2" max="8" step="0.1" value="4">
+                </div>
+                <div class="control-group" id="wavelength-group">
+                    <div class="control-label"><span>Wavelength (λ)</span></div>
+                    <input type="range" id="wavelength" min="0.5" max="3.0" step="0.1" value="1.5">
+                </div>
+                <div class="control-group">
+                    <div class="control-label"><span>Emission Rate</span></div>
+                    <input type="range" id="rate" min="100" max="1000" step="50" value="500">
+                </div>
+            </div>
+
+            <div>
+                <div class="section-title">Live Stats</div>
+                <div class="stat-row">
+                    <span style="color: var(--text-muted);">Detected Particles</span>
+                    <span class="stat-val" id="stat-detected">0</span>
+                </div>
+            </div>
+
+            <button class="btn-primary" id="reset-btn">Reset Simulation</button>
+
+            <div>
+                <div class="section-title">Detection Pattern (X-Axis)</div>
+                <div id="chart-container">
+                    <canvas id="chart-canvas"></canvas>
+                </div>
+            </div>
+
+            <div>
+                <div class="section-title">Intensity Distribution</div>
+                <div id="intensity-container">
+                    <canvas id="intensity-canvas"></canvas>
+                </div>
+                <p class="intensity-description">
+                    <span class="highlight">I = I₀ cos²(πd sinθ/λ)</span> × sinc²(πa sinθ/λ)<br>
+                    Intensity is <span class="highlight">maximum at center</span> and decreases symmetrically outward due to interference and diffraction envelope.
+                </p>
+            </div>
+
+            <div>
+                <div class="section-title">About the Simulation</div>
+                <div class="about-section">
+                    <p>
+                        The <span class="highlight">double-slit experiment</span> demonstrates the wave-particle duality of quantum mechanics. When particles pass through two narrow slits, they create an <span class="highlight">interference pattern</span> on the detection screen—a behavior characteristic of waves.
+                        <br><br>
+                        In <span class="highlight">Quantum Particle mode</span>, particles exhibit quantum interference, creating alternating bright and dark bands. In <span class="highlight">Classical Particle mode</span>, they behave classically, forming two distinct bands behind each slit.
+                        <br><br>
+                        Adjust the slit separation and wavelength to see how they affect the interference pattern.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- CONFIG ---
+        const CONFIG = {
+            particleCount: 6000,
+            screenRes: { w: 512, h: 256 },
+            sceneWidth: 40,
+            screenHeight: 20
+        };
+
+        // --- STATE ---
+        let state = {
+            mode: 'wave', // 'wave' or 'particle'
+            sep: 4.0,
+            lambda: 1.5,
+            rate: 500,
+            hits: new Uint32Array(80),
+            detectedCount: 0
+        };
+
+        // --- GLOBALS ---
+        let scene, camera, renderer, particles, screenTexture, screenContext;
+        let barrierGroup;
+        let chart, intensityChart;
+        let glowSprites; // Array to hold glow sprites for fuzzy effect
+
+        // --- INIT ---
+        function init() {
+            initThree();
+            initChart();
+            initIntensityChart();
+            initUI();
+            animate();
+        }
+
+        function createGlowTexture() {
+            const size = 64;
+            const canvas = document.createElement('canvas');
+            canvas.width = size;
+            canvas.height = size;
+            const ctx = canvas.getContext('2d');
+            
+            // Create radial gradient for fuzzy glow effect
+            const gradient = ctx.createRadialGradient(size/2, size/2, 0, size/2, size/2, size/2);
+            gradient.addColorStop(0, 'rgba(96, 165, 250, 0.8)');
+            gradient.addColorStop(0.2, 'rgba(96, 165, 250, 0.5)');
+            gradient.addColorStop(0.4, 'rgba(96, 165, 250, 0.2)');
+            gradient.addColorStop(0.7, 'rgba(96, 165, 250, 0.05)');
+            gradient.addColorStop(1, 'rgba(96, 165, 250, 0)');
+            
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, size, size);
+            
+            return new THREE.CanvasTexture(canvas);
+        }
+
+        function initThree() {
+            const canvas = document.getElementById('main-canvas');
+            scene = new THREE.Scene();
+            scene.fog = new THREE.Fog(0x111827, 40, 120);
+
+            // Camera looking at barrier and screen
+            camera = new THREE.PerspectiveCamera(50, window.innerWidth / (window.innerHeight - 60), 0.1, 500);
+            camera.position.set(55, 30, -10); 
+            camera.lookAt(0, 0, -15);
+
+            renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight - 60);
+            renderer.setPixelRatio(window.devicePixelRatio);
+
+            // Lights
+            scene.add(new THREE.AmbientLight(0x404060, 2));
+            const dirLight = new THREE.DirectionalLight(0xffffff, 1);
+            dirLight.position.set(20, 50, 20);
+            scene.add(dirLight);
+
+            // Dynamic Screen Texture
+            const sCanvas = document.createElement('canvas');
+            sCanvas.width = CONFIG.screenRes.w;
+            sCanvas.height = CONFIG.screenRes.h;
+            screenContext = sCanvas.getContext('2d');
+            screenContext.fillStyle = '#1e293b';
+            screenContext.fillRect(0,0, CONFIG.screenRes.w, CONFIG.screenRes.h);
+            
+            screenTexture = new THREE.CanvasTexture(sCanvas);
+            
+            // Screen Mesh
+            const screenGeo = new THREE.BoxGeometry(CONFIG.sceneWidth, CONFIG.screenHeight, 0.5);
+            const screenMat = new THREE.MeshStandardMaterial({ 
+                map: screenTexture, 
+                roughness: 0.1,
+                side: THREE.DoubleSide
+            });
+            const screenMesh = new THREE.Mesh(screenGeo, screenMat);
+            screenMesh.position.z = -30;
+            scene.add(screenMesh);
+
+            createBarrier();
+
+            // Create glow texture for fuzzy particles
+            const glowTexture = createGlowTexture();
+
+            // Core particles (small solid center)
+            const pGeo = new THREE.SphereGeometry(0.12, 6, 6);
+            const pMat = new THREE.MeshBasicMaterial({ color: 0x93c5fd });
+            particles = new THREE.InstancedMesh(pGeo, pMat, CONFIG.particleCount);
+            scene.add(particles);
+
+            // Glow sprites for fuzzy wave-like appearance
+            glowSprites = [];
+            const spriteMat = new THREE.SpriteMaterial({ 
+                map: glowTexture, 
+                transparent: true,
+                blending: THREE.AdditiveBlending,
+                depthWrite: false
+            });
+
+            for(let i=0; i<CONFIG.particleCount; i++) {
+                const sprite = new THREE.Sprite(spriteMat.clone());
+                sprite.scale.set(1.8, 1.8, 1);
+                sprite.visible = false;
+                scene.add(sprite);
+                glowSprites.push(sprite);
+            }
+
+            particles.userData = [];
+            for(let i=0; i<CONFIG.particleCount; i++) {
+                particles.userData.push({ 
+                    active: false, 
+                    pos: new THREE.Vector3(), 
+                    vel: new THREE.Vector3(),
+                    phase: Math.random() * Math.PI * 2, // Random phase for oscillation
+                    pulseSpeed: 2 + Math.random() * 2 // Varying pulse speeds
+                });
+            }
+        }
+
+        function createBarrier() {
+            if(barrierGroup) scene.remove(barrierGroup);
+            barrierGroup = new THREE.Group();
+
+            const mat = new THREE.MeshStandardMaterial({ color: 0x4b5563, roughness: 0.4 });
+            const height = 15;
+            const depth = 1;
+            const slitWidth = 0.5;
+
+            const centerW = state.sep - slitWidth;
+            const sideW = (CONFIG.sceneWidth - centerW - (slitWidth * 2)) / 2;
+
+            const center = new THREE.Mesh(new THREE.BoxGeometry(centerW, height, depth), mat);
+            const left = new THREE.Mesh(new THREE.BoxGeometry(sideW, height, depth), mat);
+            left.position.x = -(centerW/2 + slitWidth + sideW/2);
+            const right = new THREE.Mesh(new THREE.BoxGeometry(sideW, height, depth), mat);
+            right.position.x = (centerW/2 + slitWidth + sideW/2);
+
+            barrierGroup.add(center, left, right);
+            scene.add(barrierGroup);
+        }
+
+        // --- PHYSICS LOOP ---
+        function updatePhysics(dt, time) {
+            const dummy = new THREE.Object3D();
+            let activeIdx = 0;
+            const emitCount = Math.floor(state.rate * dt);
+            let emittedNow = 0;
+
+            // Determine if we're in quantum mode
+            const isQuantum = state.mode === 'wave';
+
+            for(let i=0; i<CONFIG.particleCount; i++) {
+                const p = particles.userData[i];
+                const sprite = glowSprites[i];
+
+                if(!p.active && emittedNow < emitCount) {
+                    p.active = true;
+                    p.pos.set((Math.random()-0.5)*12, (Math.random()-0.5)*6, 30);
+                    p.vel.set(0, 0, -25);
+                    p.phase = Math.random() * Math.PI * 2;
+                    emittedNow++;
+                }
+
+                if(p.active) {
+                    const oldZ = p.pos.z;
+                    p.pos.addScaledVector(p.vel, dt);
+
+                    // BARRIER COLLISION
+                    if (oldZ > 0 && p.pos.z <= 0) {
+                        const x = p.pos.x;
+                        const sep = state.sep / 2;
+                        const halfSlit = 0.25;
+                        const inLeft = (x > -sep-halfSlit && x < -sep+halfSlit);
+                        const inRight = (x > sep-halfSlit && x < sep+halfSlit);
+
+                        if(!inLeft && !inRight) {
+                            p.active = false;
+                            sprite.visible = false;
+                            continue; 
+                        }
+                    }
+
+                    // SCREEN COLLISION
+                    if (p.pos.z <= -30) {
+                        handleScreenHit(p);
+                        p.active = false;
+                        sprite.visible = false;
+                        continue;
+                    }
+
+                    dummy.position.copy(p.pos);
+                    dummy.updateMatrix();
+                    particles.setMatrixAt(activeIdx, dummy.matrix);
+
+                    // Update glow sprite for fuzzy effect (only in quantum mode)
+                    if (isQuantum) {
+                        sprite.visible = true;
+                        sprite.position.copy(p.pos);
+                        
+                        // Pulsating size to show wave nature
+                        const pulse = 0.8 + 0.4 * Math.sin(time * 0.005 * p.pulseSpeed + p.phase);
+                        const baseSize = 1.8;
+                        sprite.scale.set(baseSize * pulse, baseSize * pulse, 1);
+                        
+                        // Vary opacity slightly
+                        sprite.material.opacity = 0.4 + 0.2 * Math.sin(time * 0.003 * p.pulseSpeed + p.phase + 1);
+                    } else {
+                        // In classical mode, hide the fuzzy glow
+                        sprite.visible = false;
+                    }
+
+                    activeIdx++;
+                } else {
+                    sprite.visible = false;
+                }
+            }
+            particles.count = activeIdx;
+            particles.instanceMatrix.needsUpdate = true;
+        }
+
+        function handleScreenHit(p) {
+            state.detectedCount++;
+            
+            let hitX = p.pos.x;
+
+            if (state.mode === 'wave') {
+                // QUANTUM MODE: Interference probability with stronger central peak
+                // Modified equation includes single-slit diffraction envelope and enhanced central maximum
+                const L = 30; 
+                const slitWidth = 0.5; // Width of each slit for diffraction envelope
+                
+                const prob = (x) => {
+                    const theta = Math.atan(x/L);
+                    const sinTheta = Math.sin(theta);
+                    
+                    // Double-slit interference term
+                    const phi = (Math.PI * state.sep * sinTheta) / state.lambda;
+                    const interference = Math.pow(Math.cos(phi), 2);
+                    
+                    // Single-slit diffraction envelope (sinc^2 function)
+                    // This creates a stronger central peak that falls off toward the sides
+                    const beta = (Math.PI * slitWidth * sinTheta) / state.lambda;
+                    let diffraction = 1.0;
+                    if (Math.abs(beta) > 0.001) {
+                        diffraction = Math.pow(Math.sin(beta) / beta, 2);
+                    }
+                    
+                    // Gaussian envelope to further emphasize central peak
+                    const gaussianWidth = CONFIG.sceneWidth * 0.3;
+                    const gaussian = Math.exp(-(x * x) / (2 * gaussianWidth * gaussianWidth));
+                    
+                    // Combined probability: interference * diffraction envelope * gaussian boost
+                    return interference * diffraction * gaussian;
+                };
+
+                let P;
+                let safety = 0;
+                do {
+                    hitX = (Math.random()-0.5) * CONFIG.sceneWidth;
+                    P = Math.random();
+                    safety++;
+                } while(P > prob(hitX) && safety < 25);
+            } else {
+                // PARTICLE MODE: Direct trajectory (with slight classical scatter)
+                // Particle has already passed through slit at 'p.pos.x'.
+                // We add a tiny bit of scatter to simulate non-perfect classical spread,
+                // but no interference patterns.
+                hitX = p.pos.x + (Math.random() - 0.5) * 1.5;
+            }
+
+            // Draw to Texture
+            const tx = ((hitX / CONFIG.sceneWidth) + 0.5) * CONFIG.screenRes.w;
+            const ty = ((-p.pos.y / CONFIG.screenHeight) + 0.5) * CONFIG.screenRes.h;
+
+            screenContext.globalCompositeOperation = 'lighter';
+            screenContext.beginPath();
+            screenContext.arc(tx, ty, 3, 0, Math.PI*2);
+            screenContext.fillStyle = 'rgba(59, 130, 246, 0.4)'; 
+            screenContext.fill();
+            screenTexture.needsUpdate = true;
+
+            // Update Histogram
+            const bin = Math.floor(((hitX / CONFIG.sceneWidth) + 0.5) * 80);
+            if(bin >= 0 && bin < 80) state.hits[bin]++;
+        }
+
+        // --- CHART ---
+        function initChart() {
+            const ctx = document.getElementById('chart-canvas').getContext('2d');
+            chart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: Array(80).fill(''),
+                    datasets: [{
+                        data: state.hits,
+                        backgroundColor: '#3b82f6',
+                        borderWidth: 0,
+                        barPercentage: 1.1,
+                        categoryPercentage: 1.0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false }, tooltip: { enabled: false } },
+                    scales: {
+                        x: { 
+                            display: true, 
+                            title: {
+                                display: true,
+                                text: 'Pattern',
+                                color: '#9ca3af',
+                                font: { size: 11, weight: '600' }
+                            },
+                            ticks: { display: false },
+                            grid: { display: false }
+                        },
+                        y: { 
+                            display: true, 
+                            title: {
+                                display: true,
+                                text: 'Particle Count',
+                                color: '#9ca3af',
+                                font: { size: 11, weight: '600' }
+                            },
+                            grid: { color: 'rgba(255,255,255,0.05)' }, 
+                            ticks: { color: '#6b7280', font: {size: 10} } 
+                        }
+                    },
+                    animation: false
+                }
+            });
+        }
+
+        // --- INTENSITY DISTRIBUTION CHART ---
+        function initIntensityChart() {
+            const ctx = document.getElementById('intensity-canvas').getContext('2d');
+            
+            // Generate theoretical intensity distribution data
+            const intensityData = generateIntensityData();
+            
+            intensityChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: intensityData.labels,
+                    datasets: [{
+                        label: 'Intensity',
+                        data: intensityData.values,
+                        borderColor: '#10b981',
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { 
+                        legend: { display: false }, 
+                        tooltip: { enabled: false } 
+                    },
+                    scales: {
+                        x: { 
+                            display: true, 
+                            title: {
+                                display: true,
+                                text: 'Position (x)',
+                                color: '#9ca3af',
+                                font: { size: 11, weight: '600' }
+                            },
+                            ticks: { 
+                                display: true,
+                                color: '#6b7280',
+                                font: { size: 9 },
+                                maxTicksLimit: 5
+                            },
+                            grid: { color: 'rgba(255,255,255,0.05)' }
+                        },
+                        y: { 
+                            display: true, 
+                            title: {
+                                display: true,
+                                text: 'Intensity (I/I₀)',
+                                color: '#9ca3af',
+                                font: { size: 11, weight: '600' }
+                            },
+                            min: 0,
+                            max: 1.1,
+                            grid: { color: 'rgba(255,255,255,0.05)' }, 
+                            ticks: { color: '#6b7280', font: {size: 10} } 
+                        }
+                    },
+                    animation: false
+                }
+            });
+        }
+
+        function generateIntensityData() {
+            const numPoints = 200;
+            const labels = [];
+            const values = [];
+            const L = 30; // Distance to screen
+            const slitWidth = 0.5;
+            
+            for (let i = 0; i < numPoints; i++) {
+                const x = (i / (numPoints - 1) - 0.5) * CONFIG.sceneWidth;
+                labels.push(x.toFixed(1));
+                
+                if (state.mode === 'wave') {
+                    // Quantum interference pattern
+                    const theta = Math.atan(x / L);
+                    const sinTheta = Math.sin(theta);
+                    
+                    // Double-slit interference: cos²(πd·sinθ/λ)
+                    const phi = (Math.PI * state.sep * sinTheta) / state.lambda;
+                    const interference = Math.pow(Math.cos(phi), 2);
+                    
+                    // Single-slit diffraction envelope: sinc²(πa·sinθ/λ)
+                    const beta = (Math.PI * slitWidth * sinTheta) / state.lambda;
+                    let diffraction = 1.0;
+                    if (Math.abs(beta) > 0.001) {
+                        diffraction = Math.pow(Math.sin(beta) / beta, 2);
+                    }
+                    
+                    // Gaussian envelope for realistic falloff
+                    const gaussianWidth = CONFIG.sceneWidth * 0.3;
+                    const gaussian = Math.exp(-(x * x) / (2 * gaussianWidth * gaussianWidth));
+                    
+                    values.push(interference * diffraction * gaussian);
+                } else {
+                    // Classical mode: Two Gaussian peaks centered at slit positions
+                    const slitPos1 = -state.sep / 2;
+                    const slitPos2 = state.sep / 2;
+                    const sigma = 1.5; // Spread of classical distribution
+                    
+                    const peak1 = Math.exp(-Math.pow(x - slitPos1, 2) / (2 * sigma * sigma));
+                    const peak2 = Math.exp(-Math.pow(x - slitPos2, 2) / (2 * sigma * sigma));
+                    
+                    values.push((peak1 + peak2) / 2);
+                }
+            }
+            
+            return { labels, values };
+        }
+
+        function updateIntensityChart() {
+            const intensityData = generateIntensityData();
+            intensityChart.data.labels = intensityData.labels;
+            intensityChart.data.datasets[0].data = intensityData.values;
+            
+            // Change color based on mode
+            if (state.mode === 'wave') {
+                intensityChart.data.datasets[0].borderColor = '#10b981';
+                intensityChart.data.datasets[0].backgroundColor = 'rgba(16, 185, 129, 0.1)';
+            } else {
+                intensityChart.data.datasets[0].borderColor = '#f59e0b';
+                intensityChart.data.datasets[0].backgroundColor = 'rgba(245, 158, 11, 0.1)';
+            }
+            
+            intensityChart.update('none');
+        }
+
+        // --- UI & LOGIC ---
+        function initUI() {
+            // Mode Toggles
+            const btnWave = document.getElementById('btn-wave');
+            const btnPart = document.getElementById('btn-particle');
+            const waveGroup = document.getElementById('wavelength-group');
+
+            function setMode(mode) {
+                state.mode = mode;
+                resetSim();
+                updateIntensityChart();
+                if(mode === 'wave') {
+                    btnWave.classList.add('active');
+                    btnPart.classList.remove('active');
+                    waveGroup.classList.remove('disabled-control');
+                } else {
+                    btnPart.classList.add('active');
+                    btnWave.classList.remove('active');
+                    waveGroup.classList.add('disabled-control');
+                }
+            }
+
+            btnWave.onclick = () => setMode('wave');
+            btnPart.onclick = () => setMode('particle');
+
+            // Sliders
+            document.getElementById('slit-sep').oninput = (e) => {
+                state.sep = parseFloat(e.target.value);
+                createBarrier();
+                resetSim();
+                updateIntensityChart();
+            };
+            document.getElementById('wavelength').oninput = (e) => {
+                state.lambda = parseFloat(e.target.value);
+                resetSim();
+                updateIntensityChart();
+            };
+            document.getElementById('rate').oninput = (e) => {
+                state.rate = parseInt(e.target.value);
+            };
+            document.getElementById('reset-btn').onclick = resetSim;
+
+            window.addEventListener('resize', () => {
+                camera.aspect = window.innerWidth / (window.innerHeight - 60);
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight - 60);
+            });
+        }
+
+        function resetSim() {
+            state.detectedCount = 0;
+            state.hits.fill(0);
+            particles.userData.forEach((p, i) => {
+                p.active = false;
+                glowSprites[i].visible = false;
+            });
+            
+            screenContext.globalCompositeOperation = 'source-over';
+            screenContext.fillStyle = '#1e293b';
+            screenContext.fillRect(0, 0, CONFIG.screenRes.w, CONFIG.screenRes.h);
+            screenTexture.needsUpdate = true;
+            
+            chart.update('none');
+        }
+
+        function animate(time) {
+            requestAnimationFrame(animate);
+            const dt = Math.min((time - (animate.lastTime || time))/1000, 0.1) || 0;
+            animate.lastTime = time;
+
+            updatePhysics(dt, time);
+            renderer.render(scene, camera);
+
+            // Stats update throttling
+            if (time - (animate.lastFps || 0) > 250) {
+                document.getElementById('stat-detected').innerText = state.detectedCount;
+                chart.update('none');
+                animate.lastFps = time;
+            }
+        }
+
+        window.onload = init;
+
+    </script>
+</body>
+</html>

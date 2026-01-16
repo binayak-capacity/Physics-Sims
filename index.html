@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Physics Simulation Lab</title>
+    <style>
+        /* --- Global Styles --- */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #0d1117; /* Dark GitHub background */
+            color: #c9d1d9; /* Soft white text */
+            margin: 0;
+            padding: 40px;
+        }
+
+        h1 {
+            color: #ffffff;
+            margin-bottom: 40px;
+            font-size: 2rem;
+            text-align: center;
+        }
+
+        /* --- Grid Layout --- */
+        .simulation-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); 
+            gap: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* --- Card Design --- */
+        .card {
+            background-color: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 12px;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+            border-color: #58a6ff;
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #ffffff;
+            margin: 0 0 10px 0;
+        }
+
+        .card-desc {
+            font-size: 0.95rem;
+            color: #8b949e;
+            line-height: 1.5;
+            flex-grow: 1;
+            margin-bottom: 20px;
+        }
+
+        /* --- Button Design --- */
+        .btn {
+            display: inline-block;
+            background-color: #1f6feb; /* GitHub Blue */
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-weight: 600;
+            text-align: center;
+            width: fit-content;
+            transition: background-color 0.2s;
+        }
+
+        .btn:hover {
+            background-color: #388bfd;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Capacity Simulations Library</h1>
+
+    <div class="simulation-grid">
+
+        <div class="card">
+            <div class="card-title">Particle in a 1D Box</div>
+            <div class="card-desc">
+                Explore the energy eigenstates of a particle confined to a one-dimensional infinite potential well.
+            </div>
+            <a href="1D_box_refined_3.html" class="btn">Open Simulation</a>
+        </div>
+
+        <div class="card">
+            <div class="card-title">Particle in a 2D Box</div>
+            <div class="card-desc">
+                Visualize the wavefunctions and energy levels of a particle in a two-dimensional box.
+            </div>
+            <a href="2D_box_refined_2.html" class="btn">Open Simulation</a>
+        </div>
+
+        <div class="card">
+            <div class="card-title">Double Slit Experiment</div>
+            <div class="card-desc">
+                Observe how a wavefunction propagates through two slits and creates interference patterns.
+            </div>
+            <a href="Double_slit_exp_refined_2.html" class="btn">Open Simulation</a>
+        </div>
+
+        <div class="card">
+            <div class="card-title">Einstein's Train Paradox</div>
+            <div class="card-desc">
+                A classic relativity thought experiment demonstrating the relativity of simultaneity.
+            </div>
+            <a href="Einstien's_Train_Paradox_refined_1.html" class="btn">Open Simulation</a>
+        </div>
+
+        <div class="card">
+            <div class="card-title">Length Contraction</div>
+            <div class="card-desc">
+                See how moving objects appear shorter along the direction of motion as they approach light speed.
+            </div>
+            <a href="Length_contraction_refined_2.html" class="btn">Open Simulation</a>
+        </div>
+
+        <div class="card">
+            <div class="card-title">Light Clock</div>
+            <div class="card-desc">
+                Derive time dilation by observing a light pulse bouncing between mirrors in a moving frame.
+            </div>
+            <a href="Light_clock_refined_1.html" class="btn">Open Simulation</a>
+        </div>
+
+        <div class="card">
+            <div class="card-title">Multi-Stage Stern-Gerlach</div>
+            <div class="card-desc">
+                Filter particles through sequential magnetic fields to observe quantum spin properties.
+            </div>
+            <a href="Multi_stage_Stern_Gerlach_refined_2.html" class="btn">Open Simulation</a>
+        </div>
+
+        <div class="card">
+            <div class="card-title">Stern-Gerlach Experiment</div>
+            <div class="card-desc">
+                The fundamental experiment demonstrating the quantization of angular momentum (spin).
+            </div>
+            <a href="Stern_Gerlach_exp_refined_2.html" class="btn">Open Simulation</a>
+        </div>
+
+        <div class="card">
+            <div class="card-title">Time Dilation</div>
+            <div class="card-desc">
+                Visualize how time slows down for an object moving at relativistic speeds.
+            </div>
+            <a href="Time_dilation_refined_2.html" class="btn">Open Simulation</a>
+        </div>
+
+        <div class="card">
+            <div class="card-title">Total Internal Reflection</div>
+            <div class="card-desc">
+                Explore the behavior of light hitting a medium boundary at critical angles.
+            </div>
+            <a href="Total_int_sim.html" class="btn">Open Simulation</a>
+        </div>
+
+    </div>
+
+</body>
+</html>

@@ -1,0 +1,1152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>2D Quantum Particle in a Box</title>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body { 
+            background: #0f172a; 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            overflow: hidden;
+            color: #e2e8f0;
+        }
+        
+        .top-border {
+            width: 100%;
+            background: rgba(30, 41, 59, 0.8);
+            border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+            padding: 15px 30px;
+            display: flex;
+            justify-content: flex-start;
+            align-items: center;
+        }
+        
+        .top-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #60a5fa;
+            letter-spacing: 0.5px;
+        }
+        
+        .main-container {
+            display: flex;
+            width: 100vw;
+            height: calc(100vh - 60px);
+        }
+        
+        .animation-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 15px;
+            gap: 15px;
+        }
+        
+        .title-bar {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        
+        .title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #60a5fa;
+        }
+        
+        .canvases-container {
+            display: flex;
+            flex-direction: row;
+            gap: 20px;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+        }
+        
+        .canvas-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            flex: 1;
+            height: 100%;
+            max-height: calc(100vh - 120px);
+        }
+        
+        .canvas-title {
+            font-size: 14px;
+            color: #94a3b8;
+            font-weight: 500;
+        }
+        
+        canvas {
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            width: 100%;
+            height: calc(100% - 30px);
+        }
+        
+        .control-panel {
+            width: 320px;
+            min-width: 320px;
+            background: rgba(15, 23, 42, 0.95);
+            border-left: 1px solid rgba(148, 163, 184, 0.1);
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+            overflow-y: auto;
+        }
+        
+        .panel-section {
+            background: rgba(30, 41, 59, 0.5);
+            border-radius: 10px;
+            padding: 20px;
+            border: 1px solid rgba(148, 163, 184, 0.1);
+        }
+        
+        .panel-section h3 {
+            color: #60a5fa;
+            margin-bottom: 15px;
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .stat-group {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .stat {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            background: rgba(15, 23, 42, 0.5);
+            border-radius: 6px;
+        }
+        
+        .stat-label {
+            color: #94a3b8;
+            font-size: 13px;
+        }
+        
+        .stat-value {
+            color: #f1f5f9;
+            font-weight: 600;
+            font-variant-numeric: tabular-nums;
+            font-size: 14px;
+        }
+        
+        .stat-value.degenerate {
+            color: #fbbf24;
+        }
+        
+        .stat-value.non-degenerate {
+            color: #34d399;
+        }
+        
+        .stat-value.override-active {
+            color: #f472b6;
+        }
+        
+        .control {
+            margin-bottom: 18px;
+        }
+        
+        .control:last-child {
+            margin-bottom: 0;
+        }
+        
+        .control-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .control label {
+            color: #e2e8f0;
+            font-size: 13px;
+            font-weight: 500;
+        }
+        
+        .value-display {
+            background: rgba(59, 130, 246, 0.2);
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-weight: 600;
+            color: #60a5fa;
+            font-size: 14px;
+        }
+        
+        .slider {
+            width: 100%;
+            height: 8px;
+            -webkit-appearance: none;
+            appearance: none;
+            background: rgba(148, 163, 184, 0.2);
+            border-radius: 4px;
+            outline: none;
+        }
+        
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            background: #3b82f6;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 2px 8px rgba(59, 130, 246, 0.4);
+        }
+        
+        .slider::-webkit-slider-thumb:hover {
+            transform: scale(1.15);
+            box-shadow: 0 2px 12px rgba(59, 130, 246, 0.6);
+        }
+        
+        .slider:disabled {
+            opacity: 0.5;
+        }
+        
+        .view-toggle {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .toggle-btn {
+            flex: 1;
+            padding: 10px 12px;
+            background: rgba(148, 163, 184, 0.1);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            border-radius: 6px;
+            color: #94a3b8;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        
+        .toggle-btn.active {
+            background: rgba(59, 130, 246, 0.3);
+            border-color: #3b82f6;
+            color: #60a5fa;
+        }
+        
+        .toggle-btn:hover {
+            background: rgba(59, 130, 246, 0.2);
+        }
+        
+        .override-btn {
+            width: 100%;
+            padding: 12px 16px;
+            background: rgba(148, 163, 184, 0.1);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            border-radius: 6px;
+            color: #94a3b8;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.2s;
+            margin-bottom: 15px;
+        }
+        
+        .override-btn.active {
+            background: rgba(244, 114, 182, 0.3);
+            border-color: #f472b6;
+            color: #f472b6;
+        }
+        
+        .override-btn:hover {
+            background: rgba(244, 114, 182, 0.2);
+        }
+        
+        .formula {
+            color: #e2e8f0;
+            margin: 10px 0;
+            padding: 10px;
+            background: rgba(59, 130, 246, 0.1);
+            border-radius: 6px;
+            text-align: center;
+            font-size: 14px;
+            overflow-x: auto;
+        }
+        
+        .info-text {
+            color: #94a3b8;
+            font-size: 12px;
+            line-height: 1.6;
+            margin-top: 10px;
+        }
+        
+        .wavefunction-display {
+            color: #e2e8f0;
+            font-size: 13px;
+        }
+        
+        .oscillation-display {
+            background: rgba(15, 23, 42, 0.7);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            border-radius: 6px;
+            padding: 12px;
+            margin-top: 10px;
+        }
+        
+        .oscillation-display .osc-label {
+            color: #94a3b8;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 5px;
+        }
+        
+        .oscillation-display .osc-value {
+            color: #60a5fa;
+            font-size: 18px;
+            font-weight: 600;
+            font-variant-numeric: tabular-nums;
+        }
+        
+        .oscillation-display .osc-value.override-active {
+            color: #f472b6;
+        }
+        
+        .oscillation-display .osc-unit {
+            color: #94a3b8;
+            font-size: 12px;
+            margin-left: 4px;
+        }
+        
+        .panel-section.disabled {
+            opacity: 0.4;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="top-border">
+        <div class="top-title">Quantum Particle in 2D Box</div>
+    </div>
+    
+    <div class="main-container">
+        <div class="animation-area">
+            <div class="canvases-container">
+                <div class="canvas-wrapper">
+                    <div class="canvas-title">Wave Function ψ(x,y,t)</div>
+                    <canvas id="waveCanvas"></canvas>
+                </div>
+                <div class="canvas-wrapper">
+                    <div class="canvas-title">Probability Density |ψ|²</div>
+                    <canvas id="probCanvas"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <div class="control-panel">
+            <div class="panel-section">
+                <h3>Statistics</h3>
+                <div class="stat-group">
+                    <div class="stat">
+                        <span class="stat-label">Energy E:</span>
+                        <span class="stat-value" id="energy">0.00</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-label">Wave Function:</span>
+                        <span class="stat-value wavefunction-display" id="wavefunction"></span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-label">Degeneracy:</span>
+                        <span class="stat-value" id="degeneracy">Non-degenerate</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="panel-section">
+                <h3>Quantum Numbers</h3>
+                <div class="control">
+                    <div class="control-header">
+                        <label>nₓ (x-direction)</label>
+                        <span class="value-display" id="nxValue">1</span>
+                    </div>
+                    <input type="range" class="slider" id="nx" min="1" max="6" value="1">
+                </div>
+                <div class="control">
+                    <div class="control-header">
+                        <label>nᵧ (y-direction)</label>
+                        <span class="value-display" id="nyValue">1</span>
+                    </div>
+                    <input type="range" class="slider" id="ny" min="1" max="6" value="1">
+                </div>
+            </div>
+            
+            <div class="panel-section">
+                <h3>Frequency Override</h3>
+                <button class="override-btn" id="overrideBtn">Override Frequency (OFF)</button>
+                <div class="control" id="overrideControl" style="display: none;">
+                    <div class="control-header">
+                        <label>Manual Frequency</label>
+                        <span class="value-display" id="overrideFreqValue">1.0 ω₀</span>
+                    </div>
+                    <input type="range" class="slider" id="overrideFreq" min="0.1" max="10" step="0.1" value="1">
+                </div>
+                <div class="oscillation-display">
+                    <div class="osc-label">Current Oscillation Frequency</div>
+                    <div>
+                        <span class="osc-value" id="currentOscFreq">2.00</span>
+                        <span class="osc-unit">ω₀</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="panel-section">
+                <h3>View Mode</h3>
+                <div class="view-toggle">
+                    <button class="toggle-btn active" id="btn3d">Surface</button>
+                    <button class="toggle-btn" id="btn2d">Heatmap</button>
+                </div>
+            </div>
+            
+            <div class="panel-section">
+                <h3>About the Simulation</h3>
+                <div class="formula" id="formula1">
+                    \[\psi_{n_x,n_y} = \frac{2}{L} \sin\left(\frac{n_x \pi x}{L}\right) \sin\left(\frac{n_y \pi y}{L}\right)\]
+                </div>
+                <div class="formula" id="formula2">
+                    \[E = \frac{\hbar^2 \pi^2}{2mL^2}\left(n_x^2 + n_y^2\right)\]
+                </div>
+                <p class="info-text">
+                    The particle is confined to a 2D square box. Higher quantum numbers create more nodes in the wavefunction. States with nₓ ≠ nᵧ are degenerate (same energy, different wavefunctions).
+                </p>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const waveCanvas = document.getElementById('waveCanvas');
+        const probCanvas = document.getElementById('probCanvas');
+        const waveCtx = waveCanvas.getContext('2d');
+        const probCtx = probCanvas.getContext('2d');
+        
+        let nx = 1;
+        let ny = 1;
+        let time = 0;
+        let view3D = true;
+        let animationSpeed = 1;
+        let lastTime = performance.now();
+        let frequencyOverride = false;
+        let manualFrequencyMultiplier = 1;
+        
+        const L = 1;
+        const resolution = 100;
+        const hbar = 1;
+        const m = 1;
+        
+        const omega0 = (Math.PI * Math.PI * hbar) / (2 * m * L * L);
+        
+        function resizeCanvases() {
+            const wrappers = document.querySelectorAll('.canvas-wrapper');
+            wrappers.forEach((wrapper, index) => {
+                const canvas = index === 0 ? waveCanvas : probCanvas;
+                const rect = wrapper.getBoundingClientRect();
+                const size = Math.min(rect.width, rect.height - 30);
+                canvas.width = size;
+                canvas.height = size;
+            });
+        }
+        
+        window.addEventListener('resize', resizeCanvases);
+        resizeCanvases();
+        
+        document.getElementById('nx').addEventListener('input', (e) => {
+            nx = parseInt(e.target.value);
+            document.getElementById('nxValue').textContent = nx;
+            updateStatistics();
+            updateOscillationDisplay();
+        });
+        
+        document.getElementById('ny').addEventListener('input', (e) => {
+            ny = parseInt(e.target.value);
+            document.getElementById('nyValue').textContent = ny;
+            updateStatistics();
+            updateOscillationDisplay();
+        });
+        
+        document.getElementById('overrideBtn').addEventListener('click', () => {
+            const btn = document.getElementById('overrideBtn');
+            const overrideControl = document.getElementById('overrideControl');
+            
+            if (!frequencyOverride) {
+                frequencyOverride = true;
+                btn.textContent = 'Override Frequency (ON)';
+                btn.classList.add('active');
+                overrideControl.style.display = 'block';
+            } else {
+                frequencyOverride = false;
+                btn.textContent = 'Override Frequency (OFF)';
+                btn.classList.remove('active');
+                overrideControl.style.display = 'none';
+            }
+            updateOscillationDisplay();
+        });
+        
+        document.getElementById('overrideFreq').addEventListener('input', (e) => {
+            manualFrequencyMultiplier = parseFloat(e.target.value);
+            document.getElementById('overrideFreqValue').textContent = manualFrequencyMultiplier.toFixed(1) + ' ω₀';
+            updateOscillationDisplay();
+        });
+        
+        document.getElementById('btn3d').addEventListener('click', () => {
+            view3D = true;
+            document.getElementById('btn3d').classList.add('active');
+            document.getElementById('btn2d').classList.remove('active');
+        });
+        
+        document.getElementById('btn2d').addEventListener('click', () => {
+            view3D = false;
+            document.getElementById('btn2d').classList.add('active');
+            document.getElementById('btn3d').classList.remove('active');
+        });
+        
+        function getEffectiveOmega() {
+            if (frequencyOverride) {
+                return manualFrequencyMultiplier * omega0;
+            } else {
+                return (nx * nx + ny * ny) * omega0;
+            }
+        }
+        
+        function getFrequencyMultiplier() {
+            if (frequencyOverride) {
+                return manualFrequencyMultiplier;
+            } else {
+                return nx * nx + ny * ny;
+            }
+        }
+        
+        function updateOscillationDisplay() {
+            const multiplier = getFrequencyMultiplier();
+            const oscValueEl = document.getElementById('currentOscFreq');
+            oscValueEl.textContent = multiplier.toFixed(2);
+            
+            if (frequencyOverride) {
+                oscValueEl.classList.add('override-active');
+            } else {
+                oscValueEl.classList.remove('override-active');
+            }
+        }
+        
+        function updateStatistics() {
+            const E = (nx * nx + ny * ny);
+            document.getElementById('energy').textContent = E.toFixed(2) + ' E₀';
+            
+            const wavefunctionEl = document.getElementById('wavefunction');
+            wavefunctionEl.innerHTML = `\\(\\psi_{${nx},${ny}}\\)`;
+            
+            if (window.MathJax && MathJax.typesetPromise) {
+                MathJax.typesetPromise([wavefunctionEl]).catch((err) => console.log('MathJax error:', err));
+            }
+            
+            const degeneracyElement = document.getElementById('degeneracy');
+            if (nx === ny) {
+                degeneracyElement.textContent = 'Non-degenerate';
+                degeneracyElement.className = 'stat-value non-degenerate';
+            } else {
+                degeneracyElement.innerHTML = `Degenerate with \\(\\psi_{${ny},${nx}}\\)`;
+                degeneracyElement.className = 'stat-value degenerate';
+                if (window.MathJax && MathJax.typesetPromise) {
+                    MathJax.typesetPromise([degeneracyElement]).catch((err) => console.log('MathJax error:', err));
+                }
+            }
+        }
+        
+        function waveFunction(x, y, t) {
+            const omega = getEffectiveOmega();
+            const spatial = (2 / L) * Math.sin(nx * Math.PI * x / L) * Math.sin(ny * Math.PI * y / L);
+            const temporal = Math.cos(omega * t);
+            return spatial * temporal;
+        }
+        
+        function probability(x, y) {
+            const spatial = (2 / L) * Math.sin(nx * Math.PI * x / L) * Math.sin(ny * Math.PI * y / L);
+            return spatial * spatial;
+        }
+        
+        // Draw proper axes for 3D surface view
+        function drawAxes3D(ctx, canvas, isProb) {
+            const scaleFactor = canvas.width / 320;
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const verticalOffset = isProb ? 60 * scaleFactor : 15 * scaleFactor;
+            const scale = 2.8;
+            const cellSize = canvas.width / resolution / scale;
+            const boxSize = (resolution/2) * cellSize;
+            const angleX = 0.6;
+            const angleY = 0.4;
+            
+            const project = (x, y, z) => {
+                const px = centerX + (x - y) * Math.cos(angleY) * 1.2;
+                const py = centerY + verticalOffset + (x + y) * Math.sin(angleX) * 0.6 - z;
+                return { x: px, y: py };
+            };
+            
+            // Draw X axis (from origin along positive x)
+            const origin = project(-boxSize, -boxSize, 0);
+            const xEnd = project(boxSize * 1.15, -boxSize, 0);
+            const yEnd = project(-boxSize, boxSize * 1.15, 0);
+            
+            ctx.strokeStyle = '#60a5fa';
+            ctx.lineWidth = 2 * scaleFactor;
+            
+            // X axis line
+            ctx.beginPath();
+            ctx.moveTo(origin.x, origin.y);
+            ctx.lineTo(xEnd.x, xEnd.y);
+            ctx.stroke();
+            
+            // X axis arrow
+            const xArrowSize = 8 * scaleFactor;
+            ctx.beginPath();
+            ctx.moveTo(xEnd.x, xEnd.y);
+            ctx.lineTo(xEnd.x - xArrowSize, xEnd.y - xArrowSize * 0.5);
+            ctx.lineTo(xEnd.x - xArrowSize, xEnd.y + xArrowSize * 0.5);
+            ctx.closePath();
+            ctx.fillStyle = '#60a5fa';
+            ctx.fill();
+            
+            // X label
+            ctx.font = `bold ${12 * scaleFactor}px -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif`;
+            ctx.fillStyle = '#60a5fa';
+            ctx.fillText('x', xEnd.x + 5 * scaleFactor, xEnd.y + 5 * scaleFactor);
+            
+            // Y axis line
+            ctx.strokeStyle = '#34d399';
+            ctx.beginPath();
+            ctx.moveTo(origin.x, origin.y);
+            ctx.lineTo(yEnd.x, yEnd.y);
+            ctx.stroke();
+            
+            // Y axis arrow
+            ctx.beginPath();
+            ctx.moveTo(yEnd.x, yEnd.y);
+            ctx.lineTo(yEnd.x + xArrowSize, yEnd.y - xArrowSize * 0.5);
+            ctx.lineTo(yEnd.x + xArrowSize, yEnd.y + xArrowSize * 0.5);
+            ctx.closePath();
+            ctx.fillStyle = '#34d399';
+            ctx.fill();
+            
+            // Y label
+            ctx.fillStyle = '#34d399';
+            ctx.fillText('y', yEnd.x - 15 * scaleFactor, yEnd.y + 5 * scaleFactor);
+        }
+        
+        // Draw legend for wave function (3D) - REDUCED SIZE
+        function drawWaveLegend3D(ctx, canvas) {
+            const scaleFactor = canvas.width / 320;
+            const legendX = 6 * scaleFactor;
+            const legendY = 6 * scaleFactor;
+            const legendWidth = 70 * scaleFactor;
+            const legendHeight = 42 * scaleFactor;
+            
+            // Background
+            ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+            ctx.strokeStyle = 'rgba(148, 163, 184, 0.3)';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.roundRect(legendX, legendY, legendWidth, legendHeight, 4 * scaleFactor);
+            ctx.fill();
+            ctx.stroke();
+            
+            ctx.font = `${8 * scaleFactor}px -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif`;
+            
+            const boxSize = 8 * scaleFactor;
+            const textOffset = 12 * scaleFactor;
+            
+            // Positive ψ
+            ctx.fillStyle = 'rgba(96, 165, 250, 0.8)';
+            ctx.fillRect(legendX + 5 * scaleFactor, legendY + 8 * scaleFactor, boxSize, boxSize);
+            ctx.fillStyle = '#e2e8f0';
+            ctx.fillText('ψ > 0', legendX + 5 * scaleFactor + textOffset, legendY + 8 * scaleFactor + 7 * scaleFactor);
+            
+            // Negative ψ
+            ctx.fillStyle = 'rgba(248, 113, 113, 0.8)';
+            ctx.fillRect(legendX + 5 * scaleFactor, legendY + 25 * scaleFactor, boxSize, boxSize);
+            ctx.fillStyle = '#e2e8f0';
+            ctx.fillText('ψ < 0', legendX + 5 * scaleFactor + textOffset, legendY + 25 * scaleFactor + 7 * scaleFactor);
+        }
+        
+        // Draw legend for probability (3D) - REDUCED SIZE
+        function drawProbLegend3D(ctx, canvas) {
+            const scaleFactor = canvas.width / 320;
+            const legendX = 6 * scaleFactor;
+            const legendY = 6 * scaleFactor;
+            const legendWidth = 75 * scaleFactor;
+            const legendHeight = 48 * scaleFactor;
+            
+            // Background
+            ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+            ctx.strokeStyle = 'rgba(148, 163, 184, 0.3)';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.roundRect(legendX, legendY, legendWidth, legendHeight, 4 * scaleFactor);
+            ctx.fill();
+            ctx.stroke();
+            
+            ctx.font = `${8 * scaleFactor}px -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif`;
+            ctx.fillStyle = '#e2e8f0';
+            ctx.fillText('|ψ|²', legendX + 5 * scaleFactor, legendY + 12 * scaleFactor);
+            
+            // Gradient bar
+            const gradientX = legendX + 5 * scaleFactor;
+            const gradientY = legendY + 18 * scaleFactor;
+            const gradientWidth = legendWidth - 10 * scaleFactor;
+            const gradientHeight = 8 * scaleFactor;
+            
+            const gradient = ctx.createLinearGradient(gradientX, 0, gradientX + gradientWidth, 0);
+            gradient.addColorStop(0, 'rgb(30, 27, 75)');
+            gradient.addColorStop(0.5, 'rgb(124, 58, 237)');
+            gradient.addColorStop(1, 'rgb(251, 191, 36)');
+            
+            ctx.fillStyle = gradient;
+            ctx.fillRect(gradientX, gradientY, gradientWidth, gradientHeight);
+            
+            // Labels
+            ctx.font = `${7 * scaleFactor}px -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif`;
+            ctx.fillStyle = '#94a3b8';
+            ctx.fillText('Low', gradientX, gradientY + gradientHeight + 9 * scaleFactor);
+            ctx.fillText('High', gradientX + gradientWidth - 16 * scaleFactor, gradientY + gradientHeight + 9 * scaleFactor);
+        }
+        
+        // Draw proper axes for 2D heatmap with intermediate labels
+        function drawAxes2D(ctx, canvas) {
+            const scaleFactor = canvas.width / 320;
+            const margin = 40 * scaleFactor; // Increased margin for labels
+            const plotSize = canvas.width - margin * 1.8;
+            const arrowSize = 6 * scaleFactor;
+            const plotStartX = margin;
+            const plotStartY = margin * 0.7;
+            
+            // X axis
+            ctx.strokeStyle = '#60a5fa';
+            ctx.lineWidth = 2 * scaleFactor;
+            ctx.beginPath();
+            ctx.moveTo(plotStartX, canvas.height - margin + 10 * scaleFactor);
+            ctx.lineTo(plotStartX + plotSize + 15 * scaleFactor, canvas.height - margin + 10 * scaleFactor);
+            ctx.stroke();
+            
+            // X arrow
+            ctx.beginPath();
+            ctx.moveTo(plotStartX + plotSize + 15 * scaleFactor, canvas.height - margin + 10 * scaleFactor);
+            ctx.lineTo(plotStartX + plotSize + 15 * scaleFactor - arrowSize * 1.5, canvas.height - margin + 10 * scaleFactor - arrowSize);
+            ctx.lineTo(plotStartX + plotSize + 15 * scaleFactor - arrowSize * 1.5, canvas.height - margin + 10 * scaleFactor + arrowSize);
+            ctx.closePath();
+            ctx.fillStyle = '#60a5fa';
+            ctx.fill();
+            
+            // X label
+            ctx.font = `bold ${12 * scaleFactor}px -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif`;
+            ctx.fillStyle = '#60a5fa';
+            ctx.fillText('x', plotStartX + plotSize + 20 * scaleFactor, canvas.height - margin + 15 * scaleFactor);
+            
+            // Y axis
+            ctx.strokeStyle = '#34d399';
+            ctx.beginPath();
+            ctx.moveTo(plotStartX - 10 * scaleFactor, canvas.height - margin + 10 * scaleFactor);
+            ctx.lineTo(plotStartX - 10 * scaleFactor, plotStartY - 15 * scaleFactor);
+            ctx.stroke();
+            
+            // Y arrow
+            ctx.beginPath();
+            ctx.moveTo(plotStartX - 10 * scaleFactor, plotStartY - 15 * scaleFactor);
+            ctx.lineTo(plotStartX - 10 * scaleFactor - arrowSize, plotStartY - 15 * scaleFactor + arrowSize * 1.5);
+            ctx.lineTo(plotStartX - 10 * scaleFactor + arrowSize, plotStartY - 15 * scaleFactor + arrowSize * 1.5);
+            ctx.closePath();
+            ctx.fillStyle = '#34d399';
+            ctx.fill();
+            
+            // Y label
+            ctx.fillStyle = '#34d399';
+            ctx.fillText('y', plotStartX - 15 * scaleFactor, plotStartY - 20 * scaleFactor);
+            
+            // Tick marks and labels
+            ctx.font = `${10 * scaleFactor}px -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif`;
+            
+            // X axis ticks and labels (0, L/4, L/2, 3L/4, L)
+            const xLabels = ['0', 'L/4', 'L/2', '3L/4', 'L'];
+            for (let i = 0; i <= 4; i++) {
+                const xPos = plotStartX + (i / 4) * plotSize;
+                
+                // Tick mark
+                ctx.strokeStyle = '#94a3b8';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(xPos, canvas.height - margin + 10 * scaleFactor);
+                ctx.lineTo(xPos, canvas.height - margin + 16 * scaleFactor);
+                ctx.stroke();
+                
+                // Label
+                ctx.fillStyle = '#e2e8f0';
+                ctx.textAlign = 'center';
+                ctx.fillText(xLabels[i], xPos, canvas.height - margin + 28 * scaleFactor);
+            }
+            
+            // Y axis ticks and labels (0, L/4, L/2, 3L/4, L)
+            const yLabels = ['0', 'L/4', 'L/2', '3L/4', 'L'];
+            for (let i = 0; i <= 4; i++) {
+                const yPos = plotStartY + plotSize - (i / 4) * plotSize;
+                
+                // Tick mark
+                ctx.strokeStyle = '#94a3b8';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(plotStartX - 10 * scaleFactor, yPos);
+                ctx.lineTo(plotStartX - 16 * scaleFactor, yPos);
+                ctx.stroke();
+                
+                // Label
+                ctx.fillStyle = '#e2e8f0';
+                ctx.textAlign = 'right';
+                ctx.fillText(yLabels[i], plotStartX - 20 * scaleFactor, yPos + 4 * scaleFactor);
+            }
+            
+            // Reset text align
+            ctx.textAlign = 'left';
+        }
+        
+        // Draw legend for wave function (2D heatmap) - REDUCED SIZE
+        function drawWaveLegend2D(ctx, canvas) {
+            const scaleFactor = canvas.width / 320;
+            const legendX = canvas.width - 76 * scaleFactor;
+            const legendY = 6 * scaleFactor;
+            const legendWidth = 70 * scaleFactor;
+            const legendHeight = 42 * scaleFactor;
+            
+            // Background
+            ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+            ctx.strokeStyle = 'rgba(148, 163, 184, 0.3)';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.roundRect(legendX, legendY, legendWidth, legendHeight, 4 * scaleFactor);
+            ctx.fill();
+            ctx.stroke();
+            
+            ctx.font = `${8 * scaleFactor}px -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif`;
+            
+            const boxSize = 8 * scaleFactor;
+            const textOffset = 12 * scaleFactor;
+            
+            // Positive ψ
+            ctx.fillStyle = 'rgba(96, 165, 250, 0.9)';
+            ctx.fillRect(legendX + 5 * scaleFactor, legendY + 8 * scaleFactor, boxSize, boxSize);
+            ctx.fillStyle = '#e2e8f0';
+            ctx.fillText('ψ > 0', legendX + 5 * scaleFactor + textOffset, legendY + 8 * scaleFactor + 7 * scaleFactor);
+            
+            // Negative ψ
+            ctx.fillStyle = 'rgba(239, 68, 68, 0.9)';
+            ctx.fillRect(legendX + 5 * scaleFactor, legendY + 25 * scaleFactor, boxSize, boxSize);
+            ctx.fillStyle = '#e2e8f0';
+            ctx.fillText('ψ < 0', legendX + 5 * scaleFactor + textOffset, legendY + 25 * scaleFactor + 7 * scaleFactor);
+        }
+        
+        // Draw legend for probability (2D heatmap) - REDUCED SIZE
+        function drawProbLegend2D(ctx, canvas) {
+            const scaleFactor = canvas.width / 320;
+            const legendX = canvas.width - 81 * scaleFactor;
+            const legendY = 6 * scaleFactor;
+            const legendWidth = 75 * scaleFactor;
+            const legendHeight = 48 * scaleFactor;
+            
+            // Background
+            ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+            ctx.strokeStyle = 'rgba(148, 163, 184, 0.3)';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.roundRect(legendX, legendY, legendWidth, legendHeight, 4 * scaleFactor);
+            ctx.fill();
+            ctx.stroke();
+            
+            ctx.font = `${8 * scaleFactor}px -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif`;
+            ctx.fillStyle = '#e2e8f0';
+            ctx.fillText('|ψ|²', legendX + 5 * scaleFactor, legendY + 12 * scaleFactor);
+            
+            // Gradient bar
+            const gradientX = legendX + 5 * scaleFactor;
+            const gradientY = legendY + 18 * scaleFactor;
+            const gradientWidth = legendWidth - 10 * scaleFactor;
+            const gradientHeight = 8 * scaleFactor;
+            
+            const gradient = ctx.createLinearGradient(gradientX, 0, gradientX + gradientWidth, 0);
+            gradient.addColorStop(0, 'rgb(30, 27, 75)');
+            gradient.addColorStop(0.5, 'rgb(124, 58, 237)');
+            gradient.addColorStop(1, 'rgb(251, 191, 36)');
+            
+            ctx.fillStyle = gradient;
+            ctx.fillRect(gradientX, gradientY, gradientWidth, gradientHeight);
+            
+            // Labels
+            ctx.font = `${7 * scaleFactor}px -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif`;
+            ctx.fillStyle = '#94a3b8';
+            ctx.fillText('Low', gradientX, gradientY + gradientHeight + 9 * scaleFactor);
+            ctx.fillText('High', gradientX + gradientWidth - 16 * scaleFactor, gradientY + gradientHeight + 9 * scaleFactor);
+        }
+        
+        function draw3DWave(ctx, canvas, dataFunc, isProb) {
+            ctx.fillStyle = '#0f172a';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const scaleFactor = canvas.width / 320;
+            const scale = 2.8;
+            const heightScale = (isProb ? 30 : 45) * scaleFactor;
+            const angleX = 0.6;
+            const angleY = 0.4;
+            
+            const grid = [];
+            for (let i = 0; i <= resolution; i++) {
+                grid[i] = [];
+                for (let j = 0; j <= resolution; j++) {
+                    const x = (i / resolution) * L;
+                    const y = (j / resolution) * L;
+                    const z = isProb ? probability(x, y) : waveFunction(x, y, time);
+                    grid[i][j] = z;
+                }
+            }
+            
+            const cellSize = canvas.width / resolution / scale;
+            
+            for (let i = 0; i < resolution; i++) {
+                for (let j = 0; j < resolution; j++) {
+                    const x1 = (i - resolution/2) * cellSize;
+                    const y1 = (j - resolution/2) * cellSize;
+                    const x2 = (i + 1 - resolution/2) * cellSize;
+                    const y2 = (j + 1 - resolution/2) * cellSize;
+                    
+                    const z1 = grid[i][j] * heightScale;
+                    const z2 = grid[i+1] ? grid[i+1][j] * heightScale : z1;
+                    const z3 = grid[i][j+1] ? grid[i][j+1] * heightScale : z1;
+                    const z4 = (grid[i+1] && grid[i+1][j+1]) ? grid[i+1][j+1] * heightScale : z1;
+                    
+                    const verticalOffset = isProb ? 60 * scaleFactor : 15 * scaleFactor;
+                    const project = (x, y, z) => {
+                        const px = centerX + (x - y) * Math.cos(angleY) * 1.2;
+                        const py = centerY + verticalOffset + (x + y) * Math.sin(angleX) * 0.6 - z;
+                        return { x: px, y: py };
+                    };
+                    
+                    const p1 = project(x1, y1, z1);
+                    const p2 = project(x2, y1, z2);
+                    const p3 = project(x2, y2, z4);
+                    const p4 = project(x1, y2, z3);
+                    
+                    const avgZ = (z1 + z2 + z3 + z4) / 4;
+                    
+                    let fillColor;
+                    if (isProb) {
+                        // Use the same color scheme as the legend: dark purple -> purple -> yellow
+                        const intensity = Math.min(1, avgZ / heightScale * 2);
+                        if (intensity < 0.5) {
+                            // Dark purple to purple
+                            const t = intensity * 2;
+                            const r = Math.floor(30 + t * 94);
+                            const g = Math.floor(27 + t * 31);
+                            const b = Math.floor(75 + t * 162);
+                            fillColor = `rgb(${r}, ${g}, ${b})`;
+                        } else {
+                            // Purple to yellow
+                            const t = (intensity - 0.5) * 2;
+                            const r = Math.floor(124 + t * 127);
+                            const g = Math.floor(58 + t * 133);
+                            const b = Math.floor(237 - t * 201);
+                            fillColor = `rgb(${r}, ${g}, ${b})`;
+                        }
+                    } else {
+                        if (avgZ >= 0) {
+                            const intensity = Math.min(1, avgZ / heightScale * 1.5);
+                            fillColor = `rgba(96, 165, 250, ${0.3 + intensity * 0.7})`;
+                        } else {
+                            const intensity = Math.min(1, -avgZ / heightScale * 1.5);
+                            fillColor = `rgba(248, 113, 113, ${0.3 + intensity * 0.7})`;
+                        }
+                    }
+                    
+                    ctx.beginPath();
+                    ctx.moveTo(p1.x, p1.y);
+                    ctx.lineTo(p2.x, p2.y);
+                    ctx.lineTo(p3.x, p3.y);
+                    ctx.lineTo(p4.x, p4.y);
+                    ctx.closePath();
+                    ctx.fillStyle = fillColor;
+                    ctx.fill();
+                    ctx.strokeStyle = 'rgba(148, 163, 184, 0.1)';
+                    ctx.lineWidth = 0.5;
+                    ctx.stroke();
+                }
+            }
+            
+            // Draw box edges
+            ctx.strokeStyle = 'rgba(148, 163, 184, 0.5)';
+            ctx.lineWidth = 2;
+            const boxSize = (resolution/2) * cellSize;
+            const corners = [
+                { x: -boxSize, y: -boxSize, z: 0 },
+                { x: boxSize, y: -boxSize, z: 0 },
+                { x: boxSize, y: boxSize, z: 0 },
+                { x: -boxSize, y: boxSize, z: 0 }
+            ];
+            
+            const verticalOffset = isProb ? 60 * scaleFactor : 15 * scaleFactor;
+            const project = (x, y, z) => {
+                const px = centerX + (x - y) * Math.cos(angleY) * 1.2;
+                const py = centerY + verticalOffset + (x + y) * Math.sin(angleX) * 0.6 - z;
+                return { x: px, y: py };
+            };
+            
+            ctx.beginPath();
+            const p0 = project(corners[0].x, corners[0].y, 0);
+            ctx.moveTo(p0.x, p0.y);
+            for (let i = 1; i <= 4; i++) {
+                const p = project(corners[i % 4].x, corners[i % 4].y, 0);
+                ctx.lineTo(p.x, p.y);
+            }
+            ctx.stroke();
+            
+            // Draw axes
+            drawAxes3D(ctx, canvas, isProb);
+            
+            // Draw legend
+            if (isProb) {
+                drawProbLegend3D(ctx, canvas);
+            } else {
+                drawWaveLegend3D(ctx, canvas);
+            }
+        }
+        
+        function draw2DHeatmap(ctx, canvas, dataFunc, isProb) {
+            const scaleFactor = canvas.width / 320;
+            const margin = 40 * scaleFactor; // Increased margin for labels
+            const plotSize = canvas.width - margin * 1.8;
+            const plotStartX = margin;
+            const plotStartY = margin * 0.7;
+            
+            // Clear canvas
+            ctx.fillStyle = '#0f172a';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Create image data for the plot area
+            const imageData = ctx.createImageData(Math.floor(plotSize), Math.floor(plotSize));
+            const data = imageData.data;
+            
+            for (let py = 0; py < Math.floor(plotSize); py++) {
+                for (let px = 0; px < Math.floor(plotSize); px++) {
+                    const x = (px / plotSize) * L;
+                    const y = ((plotSize - py) / plotSize) * L; // Flip y for correct orientation
+                    const value = isProb ? probability(x, y) : waveFunction(x, y, time);
+                    
+                    const idx = (py * Math.floor(plotSize) + px) * 4;
+                    
+                    if (isProb) {
+                        // Use the same color scheme as the legend: dark purple -> purple -> yellow
+                        const intensity = Math.min(1, value * 1.5);
+                        if (intensity < 0.5) {
+                            // Dark purple to purple
+                            const t = intensity * 2;
+                            data[idx] = Math.floor(30 + t * 94);
+                            data[idx + 1] = Math.floor(27 + t * 31);
+                            data[idx + 2] = Math.floor(75 + t * 162);
+                        } else {
+                            // Purple to yellow
+                            const t = (intensity - 0.5) * 2;
+                            data[idx] = Math.floor(124 + t * 127);
+                            data[idx + 1] = Math.floor(58 + t * 133);
+                            data[idx + 2] = Math.floor(237 - t * 201);
+                        }
+                        data[idx + 3] = 255;
+                    } else {
+                        const maxVal = 2;
+                        if (value >= 0) {
+                            const intensity = Math.min(1, value / maxVal);
+                            data[idx] = Math.floor(59 + intensity * 37);
+                            data[idx + 1] = Math.floor(130 + intensity * 35);
+                            data[idx + 2] = Math.floor(246);
+                            data[idx + 3] = Math.floor(100 + intensity * 155);
+                        } else {
+                            const intensity = Math.min(1, -value / maxVal);
+                            data[idx] = Math.floor(239);
+                            data[idx + 1] = Math.floor(68 + intensity * 50);
+                            data[idx + 2] = Math.floor(68 + intensity * 50);
+                            data[idx + 3] = Math.floor(100 + intensity * 155);
+                        }
+                    }
+                }
+            }
+            
+            ctx.putImageData(imageData, plotStartX, plotStartY);
+            
+            // Draw grid lines
+            ctx.strokeStyle = 'rgba(148, 163, 184, 0.2)';
+            ctx.lineWidth = 1;
+            const gridSpacing = plotSize / 4; // Match the tick spacing
+            for (let i = 1; i < 4; i++) {
+                ctx.beginPath();
+                ctx.moveTo(plotStartX + i * gridSpacing, plotStartY);
+                ctx.lineTo(plotStartX + i * gridSpacing, plotStartY + plotSize);
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.moveTo(plotStartX, plotStartY + i * gridSpacing);
+                ctx.lineTo(plotStartX + plotSize, plotStartY + i * gridSpacing);
+                ctx.stroke();
+            }
+            
+            // Draw border around plot
+            ctx.strokeStyle = 'rgba(148, 163, 184, 0.5)';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(plotStartX, plotStartY, plotSize, plotSize);
+            
+            // Draw axes
+            drawAxes2D(ctx, canvas);
+            
+            // Draw legend
+            if (isProb) {
+                drawProbLegend2D(ctx, canvas);
+            } else {
+                drawWaveLegend2D(ctx, canvas);
+            }
+        }
+        
+        function animate(currentTime) {
+            const deltaTime = (currentTime - lastTime) / 1000;
+            lastTime = currentTime;
+            
+            time += deltaTime * 2 * animationSpeed;
+            
+            if (view3D) {
+                draw3DWave(waveCtx, waveCanvas, waveFunction, false);
+                draw3DWave(probCtx, probCanvas, probability, true);
+            } else {
+                draw2DHeatmap(waveCtx, waveCanvas, waveFunction, false);
+                draw2DHeatmap(probCtx, probCanvas, probability, true);
+            }
+            
+            requestAnimationFrame(animate);
+        }
+        
+        // Initialize
+        updateStatistics();
+        updateOscillationDisplay();
+        setTimeout(() => {
+            resizeCanvases();
+            requestAnimationFrame(animate);
+        }, 100);
+    </script>
+</body>
+</html>
